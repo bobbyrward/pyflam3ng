@@ -1,0 +1,135 @@
+##############################################################################
+#  The Combustion Flame Engine - pyflam3
+#  http://combustion.sourceforge.net
+#
+#  Copyright (C) 2007 by Bobby R. Ward <bobbyrward@gmail.com>
+#
+#  The Combustion Flame Engine is free software; you can redistribute
+#  it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation; either
+#  version 3 of the License, or (at your option) any later version.
+#
+#  This library is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#  Library General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this library; see the file COPYING.LIB.  If not, write to
+#  the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+#  Boston, MA 02111-1307, USA.
+##############################################################################
+from __future__ import with_statement
+import unittest
+import pyflam3
+import pyflam3.ext.renderqueue as rq
+from testing_util import print_test_name
+import time
+
+class ExtRenderQueueTestCase(unittest.TestCase):
+    test_cancel = False
+    test_complete = False
+    test_error = False
+
+    def cancel_cb(self, job):
+        # Flag it
+        self.test_cancel = True
+
+    def complete_cb(self, job):
+        # Flag it
+        self.test_complete = True
+
+    def error_cb(self, job, error):
+        import traceback
+        traceback.print_exc()
+        self.test_error = True
+
+    @print_test_name
+    def testQueue(self):
+        # Load up a genome to test
+        genome = pyflam3.Genome.from_file('share/test.flam3')[0]
+    
+        # Create the queue
+        queue = rq.RenderQueue()
+
+        # The queue will call genome render will default args
+        # On cancel it will call self.cancel_cb
+        # On success it will call self.complete_cb
+        # WARNING!: These calls are made from another thread!
+        job = rq.RenderJob(genome, filter=0.4, 
+                cancel_cb=self.cancel_cb,
+                completed_cb=self.complete_cb,
+                error_cb=self.error_cb)
+
+        # Start the queue background thread
+        queue.start()
+
+        # First we test a normal render
+        queue.queue(job)
+
+        # wait for the job to start
+        while job.queued:
+            time.sleep(0.1)
+
+        # wait for the job to finish
+        while job.running:
+            time.sleep(0.1)
+
+        # Check that it worked
+        self.assertFalse(job.running)
+        self.assertFalse(job.queued)
+        self.assertTrue(self.test_complete)
+        self.assertFalse(self.test_cancel)
+
+        # Reset the flags 
+        self.test_complete = False
+        self.test_cancel = False
+        
+        try:
+            # Test that the image actually rendered successfully.
+            # Wrap it in a try because write_image isn't supported
+            #   on Windows
+            pyflam3.write_image(
+                    ''.join(('test.render_queue.', genome.name, '.jpg')),
+                    job.buffer, size=genome.size, 
+                    comments=pyflam3.ImageComments.from_stats(
+                        job.stats, genome))
+        except NotImplementedError:
+            # Fail silently on Windows
+            pass
+
+        # reset the job to use it again
+        job.reset()
+
+        # Now test cancelling the job mid-render
+        queue.queue(job)
+
+        # wait till the job is actually running
+        while job.queued:
+            time.sleep(0.1)
+
+        # Now cancel it
+        job.cancel = True
+
+        # Wait for it to take effect
+        while job.running:
+            time.sleep(0.1)
+
+        # Check that it worked
+        self.assertFalse(self.test_complete)
+        self.assertTrue(self.test_cancel)
+
+        # Reset the flags 
+        self.test_complete = False
+        self.test_cancel = False
+
+        # now test quit
+        queue.quit = True
+
+
+
+
+
+
+
+

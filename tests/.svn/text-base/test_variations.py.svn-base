@@ -1,0 +1,58 @@
+##############################################################################
+#  The Combustion Flame Engine - pyflam3
+#  http://combustion.sourceforge.net
+#
+#  Copyright (C) 2007 by Bobby R. Ward <bobbyrward@gmail.com>
+#
+#  The Combustion Flame Engine is free software; you can redistribute
+#  it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation; either
+#  version 3 of the License, or (at your option) any later version.
+#
+#  This library is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#  Library General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this library; see the file COPYING.LIB.  If not, write to
+#  the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+#  Boston, MA 02111-1307, USA.
+##############################################################################
+import pyflam3
+import unittest
+import flame_test_file
+from pyflam3.constants import *
+from testing_util import print_test_name
+
+class VariationsTestCase(unittest.TestCase):
+    def setUp(self):
+        self.genome = pyflam3.Genome(num_xforms=2)
+
+    @print_test_name
+    def testLen(self):
+        for xform in self.genome.xforms:
+            self.assertEqual(len(xform.variations), flam3_nvariations)
+
+    @print_test_name
+    def testNamedLookup(self):
+        for xform in self.genome.xforms:
+            for variation in pyflam3.variations:
+                if variation != 'linear':
+                    self.assertEqual( xform.variations[variation], 0)
+                else:
+                    self.assertEqual( xform.variations[variation], 1)
+
+    @print_test_name
+    def testIteration(self):
+        variter = pyflam3.variations.iterkeys()
+        for xform in self.genome.xforms:
+            for (name, value) in xform.variations:
+                idx = pyflam3.variations[name]
+                if name != 'linear':
+                    self.assertEqual(xform.var[idx], 0)
+                    self.assertEqual(value, 0, msg='%s(%d) != 0, idx=%d' % (name,value,idx))
+                else:
+                    self.assertEqual(xform.var[idx], 1)
+                    self.assertEqual(value, 1, msg='%s(%d) != 0, idx=%d' % (name,value,idx))
+

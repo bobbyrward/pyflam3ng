@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svnroot/combustion/!svn/ver/84/trunk/pyflam3/pyflam3/win32_dlls
+END
+libxml2-2.dll
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svnroot/combustion/!svn/ver/82/trunk/pyflam3/pyflam3/win32_dlls/libxml2-2.dll
+END
+libflam3.dll
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svnroot/combustion/!svn/ver/82/trunk/pyflam3/pyflam3/win32_dlls/libflam3.dll
+END
+libpng12.dll
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svnroot/combustion/!svn/ver/82/trunk/pyflam3/pyflam3/win32_dlls/libpng12.dll
+END
+libjpeg-62.dll
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svnroot/combustion/!svn/ver/82/trunk/pyflam3/pyflam3/win32_dlls/libjpeg-62.dll
+END
+pthreadGC2.dll
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svnroot/combustion/!svn/ver/84/trunk/pyflam3/pyflam3/win32_dlls/pthreadGC2.dll
+END

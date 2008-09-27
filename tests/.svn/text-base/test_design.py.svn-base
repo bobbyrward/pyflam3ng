@@ -1,0 +1,61 @@
+##############################################################################
+#  The Combustion Flame Engine - pyflam3
+#  http://combustion.sourceforge.net
+#
+#  Copyright (C) 2007 by Bobby R. Ward <bobbyrward@gmail.com>
+#
+#  The Combustion Flame Engine is free software; you can redistribute
+#  it and/or modify it under the terms of the GNU General Public
+#  License as published by the Free Software Foundation; either
+#  version 3 of the License, or (at your option) any later version.
+#
+#  This library is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+#  Library General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this library; see the file COPYING.LIB.  If not, write to
+#  the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+#  Boston, MA 02111-1307, USA.
+##############################################################################
+import unittest
+import pyflam3
+from pyflam3.constants import *
+from testing_util import print_test_name
+
+import flame_test_file
+
+class DesignTestCase(unittest.TestCase):
+    """This is just a brain dump of ideas I would like the API to support"""
+    @print_test_name
+    def testRendering(self):
+        genomes = pyflam3.Genome.from_file('share/test.flam3')
+
+        self.assertEqual(len(genomes), 2)
+        
+        for genome in genomes:
+            (buffer, stats) = genome.render(filter=0.4, verbose=False, channels=4)
+
+            pyflam3.write_image(genome.name+'.png', buffer, size=genome.size, 
+                    comments=pyflam3.ImageComments.from_stats(stats, genome))
+
+    @print_test_name
+    def testCreation(self):
+        genome = pyflam3.Genome(num_xforms=1)
+        genome.flame_name = 'test.ouput'
+        genome.size = 640, 480
+        genome.final_xform_enable = 0
+        genome.spatial_oversample = 2
+
+        for xform in genome.xforms:
+            xform.density = 1.0
+            xform.variations['spherical'] = 1.0
+            xform.variations['linear'] = 0.5
+            xform.variations['blur'] = 0.01
+
+            #for name,value in xform.variations:
+            #    print name, '=', value
+            
+        str = genome.to_string()
+

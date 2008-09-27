@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svnroot/combustion/!svn/ver/190/trunk/pyflam3/pyflam3
+END
+constants.py
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svnroot/combustion/!svn/ver/105/trunk/pyflam3/pyflam3/constants.py
+END
+gradient.py
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svnroot/combustion/!svn/ver/186/trunk/pyflam3/pyflam3/gradient.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svnroot/combustion/!svn/ver/190/trunk/pyflam3/pyflam3/__init__.py
+END
+variations.py
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svnroot/combustion/!svn/ver/185/trunk/pyflam3/pyflam3/variations.py
+END
+_exceptions.py
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svnroot/combustion/!svn/ver/59/trunk/pyflam3/pyflam3/_exceptions.py
+END
+_flam3.py
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svnroot/combustion/!svn/ver/189/trunk/pyflam3/pyflam3/_flam3.py
+END
+_pyapi.py
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svnroot/combustion/!svn/ver/59/trunk/pyflam3/pyflam3/_pyapi.py
+END
+marshal.py
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svnroot/combustion/!svn/ver/71/trunk/pyflam3/pyflam3/marshal.py
+END

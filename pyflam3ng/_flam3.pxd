@@ -260,7 +260,6 @@ cdef extern from "flam3.h":
 #        int varFunc[flam3_nvariations]
 
     ctypedef struct flam3_genome:
-        pass
 #        char flame_name[flam3_name_len+1]
 #        double time
 #        int interpolation
@@ -279,7 +278,7 @@ cdef extern from "flam3.h":
 #        double brightness
 #        double contrast
 #        double gamma
-#        int  width, height
+        int  width, height
 #        int  spatial_oversample
 #        double center[2]
 #        double rot_center[2]
@@ -311,7 +310,7 @@ cdef extern from "flam3.h":
 #
 #        int temporal_filter_type
 #        double temporal_filter_width, temporal_filter_exp
-#
+        pass
 
     ctypedef struct flam3_frame:
         pass

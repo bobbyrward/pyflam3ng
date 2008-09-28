@@ -1,0 +1,7 @@
+
+Differences from pyflam3:
+-------------------------------------------------------------------------------
+    * Built using cython rather than ctypes
+    * Palette.get_standard has been moved to a free function by the name of
+        standard_palette due to limitations in cython
+

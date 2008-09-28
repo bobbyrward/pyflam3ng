@@ -124,6 +124,19 @@ cdef class Frame:
             return self._frame.pixel_aspect_ratio
 
 
+cdef class Genome:
+    cdef flam3_genome* _genome
+
+    def __cinit__(self, int num_xforms=0):
+        self._genome = <flam3_genome*>_malloc(sizeof(flam3_genome));
+
+        if num_xforms:
+            flam3_add_xforms(self._genome, num_xforms, 0)
+
+    def __dealloc(self):
+        flam3_free(self._genome)
+
+
 cdef class Palette:
     cdef flam3_palette _pal
     cdef object _name

@@ -10,4 +10,4 @@ test:
 	 python tests/test_Palette.py
 
 clean:
-	rm -rf build _flam3.c _flam3.so
+	rm -rf build pyflam3ng/_flam3.c pyflam3ng/_flam3.so

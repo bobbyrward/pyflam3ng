@@ -27,9 +27,9 @@ def pkgconfig(*packages, **kw):
 
 
 setup(
-  name = "pyflam3",
+  name = "pyflam3ng",
   ext_modules=[
-    Extension("_flam3", ["_flam3.pyx"], **pkgconfig('flam3'))
+    Extension("pyflam3ng._flam3", ["pyflam3ng/_flam3.pyx"], **pkgconfig('flam3'))
     ],
   cmdclass = {'build_ext': build_ext}
 )

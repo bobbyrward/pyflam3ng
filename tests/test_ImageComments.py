@@ -1,7 +1,7 @@
 
 def test():
-    import _flam3
-    i = _flam3.ImageComments()
+    import pyflam3ng._flam3
+    i = pyflam3ng._flam3.ImageComments()
     assert '' == i.genome
     assert '' == i.badvals
     assert '' == i.numiters

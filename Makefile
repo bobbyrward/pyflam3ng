@@ -8,3 +8,4 @@ test:
 
 clean:
 	rm -rf build pyflam3ng/_flam3.c pyflam3ng/_flam3.so
+	find ./ -name '*.pyc' -delete

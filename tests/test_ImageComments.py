@@ -1,12 +1,14 @@
+import unittest
+import pyflam3ng
+from testing_util import print_test_name
 
-def test():
-    import pyflam3ng._flam3
-    i = pyflam3ng._flam3.ImageComments()
-    assert '' == i.genome
-    assert '' == i.badvals
-    assert '' == i.numiters
-    assert '' == i.rtime
-    del i
+class TestCase(unittest.TestCase):
+    @print_test_name
+    def testImageComments(self):
+        i = pyflam3ng.ImageComments()
+        self.assertEqual('', i.genome)
+        self.assertEqual('', i.badvals)
+        self.assertEqual('', i.numiters)
+        self.assertEqual('', i.rtime)
+        del i
 
-if __name__ == '__main__':
-    test()

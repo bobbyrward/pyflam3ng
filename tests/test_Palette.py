@@ -1,23 +1,29 @@
+import unittest
+import pyflam3ng
+from testing_util import print_test_name
 
-def test():
-    import pyflam3ng._flam3
-    palette = _flam3.Palette()
+class TestCase(unittest.TestCase):
+    @print_test_name
+    def testPalettes(self):
+        palette = pyflam3ng.Palette()
 
-    palette[0] = (1, 2, 3)
+        for (r, g, b) in palette:
+            self.assertEqual((0,0,0), (r, g, b))
 
-    assert (1, 2, 3) == palette[0]
+        palette[0] = (1, 2, 3)
 
-    palette = pyflam3ng._flam3.standard_palette()
+        self.assertEqual((1, 2, 3), palette[0])
 
-    print palette[0]
+        standard_palette = pyflam3ng.standard_palette()
 
-    palette2 = pyflam3ng._flam3.Palette.from_string(palette.to_string())
+        palette_xml_element = standard_palette.to_element()
+        palette_str = standard_palette.to_string()
 
-    print palette[0]
-    print palette[1]
+        palette_from_element = pyflam3ng.Palette.from_element(palette_xml_element)
+        palette_from_string = pyflam3ng.Palette.from_string(palette_str)
 
-
-if __name__ == '__main__':
-    test()
-
+        for idx, rgb_triple in enumerate(standard_palette):
+            for triple_idx in range(3):
+                self.assertAlmostEqual(rgb_triple[triple_idx], palette_from_element[idx][triple_idx])
+                self.assertAlmostEqual(rgb_triple[triple_idx], palette_from_string[idx][triple_idx])
 

@@ -1,17 +1,18 @@
+import unittest
+import pyflam3ng
+from testing_util import print_test_name
 
-def test():
-    import pyflam3ng._flam3
-    frame = pyflam3ng._flam3.Frame()
-    assert 1 == frame.pixel_aspect_ratio
+class TestCase(unittest.TestCase):
+    @print_test_name
+    def testFrame(self):
+        frame = pyflam3ng.Frame()
+        self.assertEqual(1.0, frame.pixel_aspect_ratio)
 
-    def func():
-        pass
+        def func():
+            pass
 
-    frame = pyflam3ng._flam3.Frame(aspect=2.0, progress_func=func)
-    assert 2 == frame.pixel_aspect_ratio
+        frame = pyflam3ng.Frame(aspect=2.0, progress_func=func)
+        self.assertEqual(2.0, frame.pixel_aspect_ratio)
 
-    del frame
-
-if __name__ == '__main__':
-    test()
+        del frame
 

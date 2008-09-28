@@ -161,7 +161,7 @@ cdef class Palette:
     def __iter__(self):
         return _PaletteIterator(self)
 
-    def to_element(self, is_root=True, parent=None):
+    def to_element(self, is_root=True, object parent=None):
         # probably an easier way, but I'm not real
         # familiar with ElementTree and it probably
         # shows
@@ -183,7 +183,7 @@ cdef class Palette:
 
         return root
 
-    def from_element(cls, element):
+    def from_element(object cls, object element):
         palette = cls()
         setattr(palette, 'name', element.get('name', ''))
         setattr(palette, 'title', element.get('title', ''))
@@ -229,7 +229,7 @@ cdef class _PaletteIterator:
         return x
 
 
-def standard_palette(index=flam3_palette_random, hue_rotation=0):
+def standard_palette(int index=flam3_palette_random, double hue_rotation=0):
     cdef Palette pal
     
     pal = Palette()
@@ -238,6 +238,8 @@ def standard_palette(index=flam3_palette_random, hue_rotation=0):
 
     return pal
 
+def random_seed(object seed=None):
+    flam3_srandom()
 
 
 

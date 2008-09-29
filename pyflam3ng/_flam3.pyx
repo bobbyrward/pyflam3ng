@@ -256,7 +256,7 @@ cdef class Genome:
             return self._genome.flame_name
 
         def __set__(self, char* value):
-            _copy_str_to_buffer(self._genome.flame_name, value, flam3_name_len+1)
+            strncpy(self._genome.flame_name, value, flam3_name_len+1)
 
     property time:
         def __get__(self):
@@ -285,42 +285,166 @@ cdef class Genome:
 
             self._genome.interpolation_type = value
 
-#        int interpolation
-#        int interpolation_type
-#        int palette_interpolation
-#        int num_xforms
-#        int final_xform_index
-#        int final_xform_enable
-#        flam3_xform *xform
-#        int genome_index
-#        char parent_fname[flam3_parent_fn_len]
-#        int symmetry
-#        flam3_palette palette
-#        char *input_image
-#        int  palette_index
-#        double brightness
-#        double contrast
-#        double gamma
-#        int  spatial_oversample
-#        double center[2]
-#        double rotate
-#        double vibrancy
-#        double hue_rotation
-#        double zoom
-#        double pixels_per_unit
-#        double spatial_filter_radius
-#        int spatial_filter_select
-#        double sample_density
-#        int nbatches
-#        int ntemporal_samples
-#
-#        double estimator
-#        double estimator_curve
-#        double estimator_minimum
-#
-##        xmlDocPtr edits
-#
-#        double gam_lin_thresh
+    property palette_interpolation:
+        def __get__(self):
+            return self._genome.palette_interpolation
+
+        def __set__(self, int value):
+            if value not in ( flam3_palette_interpolation_hsv, flam3_palette_interpolation_sweep ):
+                raise ValueError('must be one of flam3_palette_interpolation_hsv, flam3_palette_interpolation_sweep')
+
+            self._genome.palette_interpolation = value 
+
+    property genome_index:
+        def __get__(self):
+            return self._genome.genome_index
+
+        def __set__(self, int value):
+            if value < 0:
+                raise ValueError('must be a positive integer')
+
+            self._genome.genome_index = value
+
+    property parent_fname:
+        def __get__(self):
+            return self._genome.parent_fname
+
+        def __set__(self, char* value):
+            strncpy(self.parent_fname, value, flam3_parent_fn_len)
+
+    property symmetry:
+        def __get__(self):
+            return self._genome.symmetry
+
+        def __set__(self, int value):
+            self._genome.symmetry = value
+
+    property brightness:
+        def __get__(self):
+            return self._genome.brightness
+
+        def __set__(self, double value):
+            self._genome.brightness = value
+
+    property contrast:
+        def __get__(self):
+            return self._genome.contrast
+
+        def __set__(self, double value):
+            self._genome.contrast = value
+
+    property gamma:
+        def __get__(self):
+            return self._genome.gamma
+
+        def __set__(self, double value):
+            self._genome.gamma = value
+
+    property oversample:
+        def __get__(self):
+            return self._genome.spatial_oversample
+
+        def __set__(self, int  value):
+            self._genome.spatial_oversample = value
+
+    property rotation:
+        def __get__(self):
+            return self._genome.rotate
+
+        def __set__(self, double value):
+            self._genome.rotate = value
+
+    property vibrancy:
+        def __get__(self):
+            return self._genome.vibrancy
+
+        def __set__(self, double value):
+            self._genome.vibrancy = value
+
+    property hue_rotation:
+        def __get__(self):
+            return self._genome.hue_rotation
+
+        def __set__(self, double value):
+            self._genome.hue_rotation = value
+
+    property zoom:
+        def __get__(self):
+            return self._genome.zoom
+
+        def __set__(self, double value):
+            self._genome.zoom = value
+
+    property pixels_per_unit:
+        def __get__(self):
+            return self._genome.pixels_per_unit
+
+        def __set__(self, double value):
+            self._genome.pixels_per_unit = value
+
+    property spatial_filter_radius:
+        def __get__(self):
+            return self._genome.spatial_filter_radius
+
+        def __set__(self, double value):
+            self._genome.spatial_filter_radius = value
+
+    property spatial_filter_select:
+        def __get__(self):
+            return self._genome.spatial_filter_select
+
+        def __set__(self, int value):
+            self._genome.spatial_filter_select = value
+
+    property sample_density:
+        def __get__(self):
+            return self._genome.sample_density
+
+        def __set__(self, double value):
+            self._genome.sample_density = value
+
+    property nbatches:
+        def __get__(self):
+            return self._genome.nbatches
+
+        def __set__(self, int value):
+            self._genome.nbatches = value
+
+    property ntemporal_samples:
+        def __get__(self):
+            return self._genome.ntemporal_samples
+
+        def __set__(self, int value):
+            self._genome.ntemporal_samples = value
+
+    property estimator:
+        def __get__(self):
+            return self._genome.estimator
+
+        def __set__(self, double value):
+            self._genome.estimator = value
+
+    property estimator_curve:
+        def __get__(self):
+            return self._genome.estimator_curve
+
+        def __set__(self, double value):
+            self._genome.estimator_curve = value
+
+    property estimator_minimum:
+        def __get__(self):
+            return self._genome.estimator_minimum
+
+        def __set__(self, double value):
+            self._genome.estimator_minimum = value
+
+    property gamma_linear_threshold:
+        def __get__(self):
+            return self._genome.gam_lin_thresh
+
+        def __set__(self, double value):
+            self._genome.gam_lin_thresh = value
+
 #
 #        int palette_index0
 #        double hue_rotation0
@@ -330,6 +454,15 @@ cdef class Genome:
 #
 #        int temporal_filter_type
 #        double temporal_filter_width, temporal_filter_exp
+#        int num_xforms
+#        flam3_xform *xform
+#        int final_xform_index
+#        int final_xform_enable
+#        flam3_palette palette
+#        char *input_image
+#        int  palette_index
+#        double center[2]
+
 
 
 cdef class Palette:

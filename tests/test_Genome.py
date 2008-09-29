@@ -193,6 +193,25 @@ class TestCase(unittest.TestCase):
         self.assertRaises(ValueError, temp)
 
 
+    @print_test_name
+    def testPaletteInterpolation(self):
+        genome = pyflam3ng.Genome(2)
+
+        self.assertEqual(0, genome.palette_interpolation)
+
+        values = [ flam3_palette_interpolation_hsv
+                 , flam3_palette_interpolation_sweep
+                 ]
+
+        for interp_value in values:
+            genome.palette_interpolation = interp_value
+            self.assertEqual(interp_value, genome.palette_interpolation)
+
+
+        def temp(): genome.palette_interpolation = -6
+        self.assertRaises(ValueError, temp)
+
+
 
 
 

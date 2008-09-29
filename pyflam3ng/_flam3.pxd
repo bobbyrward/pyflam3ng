@@ -260,57 +260,56 @@ cdef extern from "flam3.h":
 #        int varFunc[flam3_nvariations]
 
     ctypedef struct flam3_genome:
-#        char flame_name[flam3_name_len+1]
-#        double time
-#        int interpolation
-#        int interpolation_type
-#        int palette_interpolation
-#        int num_xforms
-#        int final_xform_index
-#        int final_xform_enable
-#        flam3_xform *xform
-#        int genome_index
-#        char parent_fname[flam3_parent_fn_len]
-#        int symmetry
-#        flam3_palette palette
-#        char *input_image
-#        int  palette_index
-#        double brightness
-#        double contrast
-#        double gamma
+        char flame_name[flam3_name_len+1]
+        double time
+        int interpolation
+        int interpolation_type
+        int palette_interpolation
+        int num_xforms
+        int final_xform_index
+        int final_xform_enable
+        flam3_xform *xform
+        int genome_index
+        char parent_fname[flam3_parent_fn_len]
+        int symmetry
+        flam3_palette palette
+        char *input_image
+        int  palette_index
+        double brightness
+        double contrast
+        double gamma
         int  width, height
-#        int  spatial_oversample
-#        double center[2]
-#        double rot_center[2]
-#        double rotate
-#        double vibrancy
-#        double hue_rotation
-#        double background[3]
-#        double zoom
-#        double pixels_per_unit
-#        double spatial_filter_radius
-#        int spatial_filter_select
-#        double sample_density
-#        int nbatches
-#        int ntemporal_samples
-#
-#        double estimator
-#        double estimator_curve
-#        double estimator_minimum
-#
+        int  spatial_oversample
+        double center[2]
+        double rot_center[2]
+        double rotate
+        double vibrancy
+        double hue_rotation
+        double background[3]
+        double zoom
+        double pixels_per_unit
+        double spatial_filter_radius
+        int spatial_filter_select
+        double sample_density
+        int nbatches
+        int ntemporal_samples
+
+        double estimator
+        double estimator_curve
+        double estimator_minimum
+
 #        xmlDocPtr edits
-#
-#        double gam_lin_thresh
-#
-#        int palette_index0
-#        double hue_rotation0
-#        int palette_index1
-#        double hue_rotation1
-#        double palette_blend
-#
-#        int temporal_filter_type
-#        double temporal_filter_width, temporal_filter_exp
-        pass
+
+        double gam_lin_thresh
+
+        int palette_index0
+        double hue_rotation0
+        int palette_index1
+        double hue_rotation1
+        double palette_blend
+
+        int temporal_filter_type
+        double temporal_filter_width, temporal_filter_exp
 
     ctypedef struct flam3_frame:
         pass

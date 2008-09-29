@@ -51,3 +51,13 @@ class TestCase(unittest.TestCase):
         genome.rotation_center = (1, 2)
         self.assertEqual((1, 2), tuple(genome.rotation_center))
 
+    @print_test_name
+    def testRotationCenter(self):
+        genome = pyflam3ng.Genome()
+
+        self.assertEqual(3, len(genome.bgcolor))
+        self.assertEqual((0, 0, 0), tuple(genome.bgcolor))
+
+        genome.bgcolor = (1, 2, 3)
+        self.assertEqual((1, 2, 3), tuple(genome.bgcolor))
+

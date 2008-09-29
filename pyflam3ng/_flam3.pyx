@@ -150,6 +150,14 @@ cdef class Genome:
         def __set__(self, value):
             self._genome.rot_center[0], self._genome.rot_center[1] = value
 
+    property bgcolor:
+        def __get__(self):
+            return (self._genome.background[0], self._genome.background[1], self._genome.background[2])
+
+        def __set__(self, value):
+            self._genome.background[0], self._genome.background[1], self._genome.background[2] = value
+
+
 
 
 cdef class Palette:

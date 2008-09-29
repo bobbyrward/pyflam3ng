@@ -136,6 +136,14 @@ cdef class Genome:
     def __dealloc(self):
         flam3_free(self._genome)
 
+
+    def clone(self):
+        cdef Genome other = Genome()
+
+        flam3_copy(other._genome, self._genome)
+
+        return other
+
     property size:
         def __get__(self):
             return (self._genome.width, self._genome.height)

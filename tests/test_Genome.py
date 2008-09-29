@@ -61,3 +61,15 @@ class TestCase(unittest.TestCase):
         genome.bgcolor = (1, 2, 3)
         self.assertEqual((1, 2, 3), genome.bgcolor)
 
+    @print_test_name
+    def testClone(self):
+        genome1 = pyflam3ng.Genome()
+        self.assertEqual((0, 0), genome1.size)
+
+        genome1.size = (640, 480)
+        self.assertEqual((640, 480), genome1.size)
+
+        genome2 = genome1.clone()
+        self.assertEqual((640, 480), genome2.size)
+
+

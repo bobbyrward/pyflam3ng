@@ -20,10 +20,12 @@
 #  the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 #  Boston, MA 02111-1307, USA.
 ##############################################################################
+from __future__ import with_statement
 
 import unittest
 import pyflam3ng
 from testing_util import print_test_name
+import os
 
 class TestCase(unittest.TestCase):
     @print_test_name
@@ -80,4 +82,46 @@ class TestCase(unittest.TestCase):
 
         self.assertTrue(isinstance(genome_str, basestring))
         self.assertTrue(len(genome_str) > 0)
+
+    @print_test_name
+    def testToFile(self):
+        TEST_FILENAME = 'test.output-to_file.flam3'
+        genome = pyflam3ng.Genome(2)
+        genome_str = genome.to_string()
+
+        if os.path.exists(TEST_FILENAME):
+            os.remove(TEST_FILENAME)
+
+        self.assertFalse(os.path.exists(TEST_FILENAME))
+
+        genome.to_file(TEST_FILENAME)
+
+        self.assertTrue(os.path.exists(TEST_FILENAME))
+
+        with open(TEST_FILENAME) as fd:
+            test_str = fd.read()
+
+        self.assertEqual(genome_str, test_str)
+
+        if os.path.exists(TEST_FILENAME):
+            os.remove(TEST_FILENAME)
+
+        self.assertFalse(os.path.exists(TEST_FILENAME))
+
+        with open(TEST_FILENAME, 'w') as fd:
+            genome.to_file('', fd=fd)
+
+        self.assertTrue(os.path.exists(TEST_FILENAME))
+
+        with open(TEST_FILENAME) as fd:
+            test_str = fd.read()
+
+        self.assertEqual(genome_str, test_str)
+
+        if os.path.exists(TEST_FILENAME):
+            os.remove(TEST_FILENAME)
+
+
+
+
 

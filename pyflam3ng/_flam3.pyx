@@ -152,6 +152,13 @@ cdef class Genome:
 
         return py_string
 
+    def to_file(self, filename, fd=None):
+        if fd is not None:
+            fd.write(self.to_string())
+        else:
+            with open(filename, 'wb') as fd:
+                fd.write(self.to_string())
+
     property size:
         def __get__(self):
             return (self._genome.width, self._genome.height)

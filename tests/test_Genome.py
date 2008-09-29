@@ -48,6 +48,8 @@ class TestCase(unittest.TestCase):
 
         self.assertEqual('genome_test_name', genome.name)
 
+        def temp(): genome.name = 0.12345
+        self.assertRaises(TypeError, temp)
 
     @print_test_name
     def testSize(self):
@@ -110,6 +112,9 @@ class TestCase(unittest.TestCase):
 
         self.assertFalse(os.path.exists(TEST_FILENAME))
 
+        def temp(): genome.to_file(None)
+        self.assertRaises(TypeError, temp)
+
         genome.to_file(TEST_FILENAME)
 
         self.assertTrue(os.path.exists(TEST_FILENAME))
@@ -137,6 +142,18 @@ class TestCase(unittest.TestCase):
         if os.path.exists(TEST_FILENAME):
             os.remove(TEST_FILENAME)
 
+    @print_test_name
+    def testTime(self):
+        genome = pyflam3ng.Genome(2)
+
+        self.assertAlmostEqual(0, genome.time)
+
+        genome.time = 0.12345
+
+        self.assertAlmostEqual(0.12345, genome.time)
+
+        def temp(): genome.time = 'aaa'
+        self.assertRaises(TypeError, temp)
 
 
 

@@ -255,13 +255,19 @@ cdef class Genome:
         def __get__(self):
             return self._genome.flame_name
 
-        def __set__(self, value):
-            if not PyString_Check(value):
-                raise TypeError
+        def __set__(self, char* value):
+            #if not PyString_Check(value):
+            #    raise TypeError
 
             _copy_str_to_buffer(self._genome.flame_name, value, flam3_name_len+1)
 
-#        char flame_name[flam3_name_len+1]
+    property time:
+        def __get__(self):
+            return self._genome.time
+
+        def __set__(self, double time):
+            self._genome.time = time
+            
 #        double time
 #        int interpolation
 #        int interpolation_type

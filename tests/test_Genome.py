@@ -36,28 +36,28 @@ class TestCase(unittest.TestCase):
         genome = pyflam3ng.Genome()
 
         self.assertEqual(2, len(genome.size))
-        self.assertEqual((0, 0), tuple(genome.size))
+        self.assertEqual((0, 0), genome.size)
 
         genome.size = (1, 2)
-        self.assertEqual((1, 2), tuple(genome.size))
+        self.assertEqual((1, 2), genome.size)
 
     @print_test_name
     def testRotationCenter(self):
         genome = pyflam3ng.Genome()
 
         self.assertEqual(2, len(genome.rotation_center))
-        self.assertEqual((0, 0), tuple(genome.rotation_center))
+        self.assertEqual((0, 0), genome.rotation_center)
 
         genome.rotation_center = (1, 2)
-        self.assertEqual((1, 2), tuple(genome.rotation_center))
+        self.assertEqual((1, 2), genome.rotation_center)
 
     @print_test_name
     def testRotationCenter(self):
         genome = pyflam3ng.Genome()
 
         self.assertEqual(3, len(genome.bgcolor))
-        self.assertEqual((0, 0, 0), tuple(genome.bgcolor))
+        self.assertEqual((0, 0, 0), genome.bgcolor)
 
         genome.bgcolor = (1, 2, 3)
-        self.assertEqual((1, 2, 3), tuple(genome.bgcolor))
+        self.assertEqual((1, 2, 3), genome.bgcolor)
 

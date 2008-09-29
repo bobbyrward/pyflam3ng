@@ -256,9 +256,6 @@ cdef class Genome:
             return self._genome.flame_name
 
         def __set__(self, char* value):
-            #if not PyString_Check(value):
-            #    raise TypeError
-
             _copy_str_to_buffer(self._genome.flame_name, value, flam3_name_len+1)
 
     property time:

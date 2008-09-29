@@ -29,9 +29,25 @@ import os
 
 class TestCase(unittest.TestCase):
     @print_test_name
-    def testCreaton(self):
+    def testCreation(self):
         genome = pyflam3ng.Genome(4)
         genome = pyflam3ng.Genome()
+
+    @print_test_name
+    def testName(self):
+        genome = pyflam3ng.Genome()
+
+        self.assertEqual('', genome.name)
+
+        s = 'genome_test_name'
+        genome.name = s
+
+        self.assertEqual('genome_test_name', genome.name)
+
+        del s
+
+        self.assertEqual('genome_test_name', genome.name)
+
 
     @print_test_name
     def testSize(self):

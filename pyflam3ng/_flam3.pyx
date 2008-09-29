@@ -25,10 +25,41 @@ cimport _flam3
 import xml.etree.cElementTree as etree
 import StringIO
 
+
+cdef int PyString_Check(object op):
+    return isinstance(op, str)
+
+
 cdef void* _malloc(size):
     cdef void *p
     p = flam3_malloc(size)
     return memset(p, 0, size)
+
+
+# Assumes you created a buffer big enough...
+cdef char* _copy_str_to_buffer(char* dest_str, object source_str, int max_len):
+    if not PyString_Check(source_str) or source_str is None:
+        raise TypeError("Expected a string value received %r" % source_str)
+
+    strncpy(dest_str, <char*>source_str, max_len)
+
+    return dest_str
+
+
+#Return value needs to be freed using flam3_free
+cdef char* _create_str_copy(object source_str):
+    if not PyString_Check(source_str) or source_str is None:
+        raise TypeError("Expected a string value received %r" % source_str)
+
+    cdef int string_len = strlen(source_str)
+
+    cdef char* c_string = source_str
+    cdef char* c_buffer_copy = <char*>flam3_malloc(string_len + 1)
+
+    if c_buffer_copy == NULL:
+        raise MemoryError('Unable to allocate copy of input buffer')
+
+    return strncpy(c_buffer_copy, c_string, string_len + 1)
 
 
 cdef class ImageComments:
@@ -169,22 +200,18 @@ cdef class Genome:
                 fd.write(self.to_string())
 
     @classmethod
-    def from_string(cls, input_buffer, filename='<unknown>', defaults=True):
+    def from_string(cls, object input_buffer, object filename='<unknown>', object defaults=True):
         cdef int ncps = 0
-        cdef char* c_input_buffer = input_buffer
         cdef char* c_buffer_copy
         cdef flam3_genome* result
         cdef list genome_list = list()
         cdef Genome genome
 
+        if filename is None or not PyString_Check(input_buffer):
+            return TypeError('filename  must be an str object')
+
         ##HACK: so, flam3_parse_xml2 actually free's the buffer passed in...ick
-        string_len = strlen(input_buffer)
-
-        c_buffer_copy = <char*>flam3_malloc(string_len + 1)
-        if c_buffer_copy == NULL:
-            raise MemoryError('Unable to allocate copy of input buffer')
-
-        strncpy(c_buffer_copy, c_input_buffer, string_len + 1)
+        c_buffer_copy =  _create_str_copy(input_buffer)
 
         result = flam3_parse_xml2(c_buffer_copy, filename,
                 flam3_defaults_on if defaults else flam3_defaults_off, &ncps)
@@ -224,7 +251,63 @@ cdef class Genome:
         def __set__(self, value):
             self._genome.background[0], self._genome.background[1], self._genome.background[2] = value
 
+    property name:
+        def __get__(self):
+            return self._genome.flame_name
 
+        def __set__(self, value):
+            if not PyString_Check(value):
+                raise TypeError
+
+            _copy_str_to_buffer(self._genome.flame_name, value, flam3_name_len+1)
+
+#        char flame_name[flam3_name_len+1]
+#        double time
+#        int interpolation
+#        int interpolation_type
+#        int palette_interpolation
+#        int num_xforms
+#        int final_xform_index
+#        int final_xform_enable
+#        flam3_xform *xform
+#        int genome_index
+#        char parent_fname[flam3_parent_fn_len]
+#        int symmetry
+#        flam3_palette palette
+#        char *input_image
+#        int  palette_index
+#        double brightness
+#        double contrast
+#        double gamma
+#        int  spatial_oversample
+#        double center[2]
+#        double rotate
+#        double vibrancy
+#        double hue_rotation
+#        double zoom
+#        double pixels_per_unit
+#        double spatial_filter_radius
+#        int spatial_filter_select
+#        double sample_density
+#        int nbatches
+#        int ntemporal_samples
+#
+#        double estimator
+#        double estimator_curve
+#        double estimator_minimum
+#
+##        xmlDocPtr edits
+#
+#        double gam_lin_thresh
+#
+#        int palette_index0
+#        double hue_rotation0
+#        int palette_index1
+#        double hue_rotation1
+#        double palette_blend
+#
+#        int temporal_filter_type
+#        double temporal_filter_width, temporal_filter_exp
 
 
 cdef class Palette:

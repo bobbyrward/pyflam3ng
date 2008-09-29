@@ -27,8 +27,12 @@ from testing_util import print_test_name
 
 class TestCase(unittest.TestCase):
     @print_test_name
-    def testGenome(self):
+    def testCreaton(self):
         genome = pyflam3ng.Genome(4)
+        genome = pyflam3ng.Genome()
+
+    @print_test_name
+    def testSize(self):
         genome = pyflam3ng.Genome()
 
         self.assertEqual(2, len(genome.size))
@@ -36,11 +40,4 @@ class TestCase(unittest.TestCase):
 
         genome.size = (1, 2)
         self.assertEqual((1, 2), tuple(genome.size))
-
-
-        size = genome.size
-        del genome
-
-        self.assertEqual((1, 2), tuple(size))
-        del size
 

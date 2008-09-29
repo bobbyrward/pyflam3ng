@@ -143,6 +143,14 @@ cdef class Genome:
         def __set__(self, value):
             self._genome.width, self._genome.height = value
 
+    property rotation_center:
+        def __get__(self):
+            return (self._genome.rot_center[0], self._genome.rot_center[1])
+
+        def __set__(self, value):
+            self._genome.rot_center[0], self._genome.rot_center[1] = value
+
+
 
 cdef class Palette:
     cdef flam3_palette _pal

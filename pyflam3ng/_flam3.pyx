@@ -124,6 +124,12 @@ cdef class Frame:
             return self._frame.pixel_aspect_ratio
 
 
+cdef void _initialize_genome_list(list genome_list):
+    for idx, genome in enumerate(genome_list):
+        if not genome_list[idx].name:
+            genome_list[idx].name = '%s-%d' % (genome_list[idx].parent_fname, idx)
+
+
 cdef class Genome:
     cdef flam3_genome* _genome
 
@@ -132,6 +138,9 @@ cdef class Genome:
 
         if num_xforms:
             flam3_add_xforms(self._genome, num_xforms, 0)
+
+    cdef void copy_genome(self, flam3_genome* genome):
+        memmove(self._genome, genome, sizeof(flam3_genome))
 
     def __dealloc(self):
         flam3_free(self._genome)
@@ -158,6 +167,41 @@ cdef class Genome:
         else:
             with open(filename, 'wb') as fd:
                 fd.write(self.to_string())
+
+    @classmethod
+    def from_string(cls, input_buffer, filename='<unknown>', defaults=True):
+        cdef int ncps = 0
+        cdef char* c_input_buffer = input_buffer
+        cdef char* c_buffer_copy
+        cdef flam3_genome* result
+        cdef list genome_list = list()
+        cdef Genome genome
+
+        ##HACK: so, flam3_parse_xml2 actually free's the buffer passed in...ick
+        string_len = strlen(input_buffer)
+
+        c_buffer_copy = <char*>flam3_malloc(string_len + 1)
+        if c_buffer_copy == NULL:
+            raise MemoryError('Unable to allocate copy of input buffer')
+
+        strncpy(c_buffer_copy, c_input_buffer, string_len + 1)
+
+        result = flam3_parse_xml2(c_buffer_copy, filename,
+                flam3_defaults_on if defaults else flam3_defaults_off, &ncps)
+
+        for 0 <= i < ncps:
+            genome = cls()
+            genome.copy_genome(&result[i])
+            genome_list.append(genome)
+
+        ##NOTE: Don't free the input, flam3 already does this.
+        flam3_free(result)
+
+        _initialize_genome_list(genome_list)
+
+        return genome_list
+
+    from_string = classmethod(from_string)
 
     property size:
         def __get__(self):

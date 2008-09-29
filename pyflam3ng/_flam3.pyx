@@ -124,49 +124,11 @@ cdef class Frame:
             return self._frame.pixel_aspect_ratio
 
 
-cdef class _FakedGenomeSize:
-    cdef flam3_genome* _parent
-
-    def __cinit__(self):
-        pass
-
-    def __len__(self):
-        return 2
-
-    cdef void set_parent(self, flam3_genome* parent):
-        self._parent = parent
-
-    def __setitem__(self, key, int value):
-        if isinstance(key, int):
-            if key == 0:
-                self._parent.width = value
-            elif key == 1:
-                self._parent.height = value
-            else:
-                raise IndexError('key must be 0 or 1')
-        else:
-            raise TypeError('key must be an int')
-
-    def __getitem__(self, key):
-        if isinstance(key, int):
-            if key == 0:
-                return self._parent.width
-            elif key == 1:
-                return self._parent.height
-            else:
-                raise IndexError('key must be 0 or 1')
-        else:
-            raise TypeError('key must be an int')
-
-
 cdef class Genome:
     cdef flam3_genome* _genome
-    cdef _FakedGenomeSize _faked_size
 
     def __cinit__(self, int num_xforms=0):
         self._genome = <flam3_genome*>_malloc(sizeof(flam3_genome));
-        self._faked_size = _FakedGenomeSize()
-        self._faked_size.set_parent(self._genome)
 
         if num_xforms:
             flam3_add_xforms(self._genome, num_xforms, 0)
@@ -176,7 +138,7 @@ cdef class Genome:
 
     property size:
         def __get__(self):
-            return self._faked_size
+            return (self._genome.width, self._genome.height)
 
         def __set__(self, value):
             self._genome.width, self._genome.height = value

@@ -30,5 +30,8 @@ test:
 	 python tests/test.py  
 
 clean:
-	rm -rf build pyflam3ng/_flam3.c pyflam3ng/_flam3.so
+	-rm -r build 
+	-rm pyflam3ng/_flam3.c 
+	-rm pyflam3ng/_flam3.so
+	-rm test.*
 	find ./ -name '*.pyc' -delete

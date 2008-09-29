@@ -144,6 +144,14 @@ cdef class Genome:
 
         return other
 
+    def to_string(self):
+        cdef char* c_string = flam3_print_to_string(self._genome)
+        cdef object py_string = str(c_string)
+
+        flam3_free(c_string)
+
+        return py_string
+
     property size:
         def __get__(self):
             return (self._genome.width, self._genome.height)

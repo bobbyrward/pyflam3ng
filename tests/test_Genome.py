@@ -72,4 +72,12 @@ class TestCase(unittest.TestCase):
         genome2 = genome1.clone()
         self.assertEqual((640, 480), genome2.size)
 
+    @print_test_name
+    def testToString(self):
+        genome = pyflam3ng.Genome()
+
+        genome_str = genome.to_string()
+
+        self.assertTrue(isinstance(genome_str, basestring))
+        self.assertTrue(len(genome_str) > 0)
 

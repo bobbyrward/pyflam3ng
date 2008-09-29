@@ -24,6 +24,7 @@ from __future__ import with_statement
 
 import unittest
 import pyflam3ng
+from pyflam3ng.constants import *
 from testing_util import print_test_name
 import os
 
@@ -154,6 +155,44 @@ class TestCase(unittest.TestCase):
 
         def temp(): genome.time = 'aaa'
         self.assertRaises(TypeError, temp)
+
+    @print_test_name
+    def testInterpolation(self):
+        genome = pyflam3ng.Genome(2)
+
+        self.assertEqual(0, genome.interpolation)
+
+        genome.interpolation = flam3_interpolation_linear
+        self.assertEqual(flam3_interpolation_linear, genome.interpolation)
+
+        genome.interpolation = flam3_interpolation_smooth
+        self.assertEqual(flam3_interpolation_smooth, genome.interpolation)
+
+        def temp(): genome.interpolation = -3
+        self.assertRaises(ValueError, temp)
+
+
+    @print_test_name
+    def testInterpolationType(self):
+        genome = pyflam3ng.Genome(2)
+
+        self.assertEqual(0, genome.interpolation_type)
+
+        values = [ flam3_inttype_linear
+                 , flam3_inttype_log
+                 , flam3_inttype_compat
+                 , flam3_inttype_older
+                 ]
+
+        for interp_value in values:
+            genome.interpolation_type = interp_value
+            self.assertEqual(interp_value, genome.interpolation_type)
+
+
+        def temp(): genome.interpolation_type = -6
+        self.assertRaises(ValueError, temp)
+
+
 
 
 

@@ -41,7 +41,7 @@ cdef char* _copy_str_to_buffer(char* dest_str, object source_str, int max_len):
     if not PyString_Check(source_str) or source_str is None:
         raise TypeError("Expected a string value received %r" % source_str)
 
-    strncpy(dest_str, <char*>source_str, max_len)
+    strncpy(dest_str, source_str, max_len)
 
     return dest_str
 
@@ -265,7 +265,26 @@ cdef class Genome:
         def __set__(self, double time):
             self._genome.time = time
             
-#        double time
+    property interpolation:
+        def __get__(self):
+            return self._genome.interpolation
+
+        def __set__(self, int value):
+            if value != flam3_interpolation_linear and value != flam3_interpolation_smooth:
+                raise ValueError('must be one of flam3_interpolation_linear  or flam3_interpolation_smooth')
+
+            self._genome.interpolation = value
+
+    property interpolation_type:
+        def __get__(self):
+            return self._genome.interpolation_type
+
+        def __set__(self, int value):
+            if value not in (flam3_inttype_linear, flam3_inttype_log, flam3_inttype_compat, flam3_inttype_older):
+                raise ValueError('must be one of flam3_inttype_linear, flam3_inttype_log, flam3_inttype_compat or flam3_inttype_older')
+
+            self._genome.interpolation_type = value
+
 #        int interpolation
 #        int interpolation_type
 #        int palette_interpolation
@@ -429,9 +448,6 @@ def standard_palette(int index=flam3_palette_random, double hue_rotation=0):
 
 def random_seed(object seed=None):
     flam3_srandom()
-
-
-
 
 
 

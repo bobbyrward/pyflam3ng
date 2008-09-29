@@ -41,3 +41,13 @@ class TestCase(unittest.TestCase):
         genome.size = (1, 2)
         self.assertEqual((1, 2), tuple(genome.size))
 
+    @print_test_name
+    def testRotationCenter(self):
+        genome = pyflam3ng.Genome()
+
+        self.assertEqual(2, len(genome.rotation_center))
+        self.assertEqual((0, 0), tuple(genome.rotation_center))
+
+        genome.rotation_center = (1, 2)
+        self.assertEqual((1, 2), tuple(genome.rotation_center))
+

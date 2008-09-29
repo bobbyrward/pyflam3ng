@@ -37,7 +37,6 @@ except ImportError:
     import pyflam3ng
 
 def run_test(name, test, result):
-    print 'Running %s:' % name
     test(result)
 
 def get_test_case(module_name):
@@ -71,13 +70,14 @@ class SimpleTestRunner(object):
         result = unittest.TestResult()
         test(result)
 
+        if result.wasSuccessful():
+            print 'All %d tests successful.' % result.testsRun
         #if not result.wasSuccessful():
             #print '%d tests failed' % len(result.errors)
             #for (test, traceback) in result.errors:
                 #print 'Error in:', test.id()
                 #print traceback
         #else:
-            #print 'All %d tests successful.' % result.testsRun
 
 
 def main():

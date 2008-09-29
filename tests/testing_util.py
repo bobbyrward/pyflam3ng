@@ -36,8 +36,6 @@ def print_test_name(test):
 
             print '\tX %s' %  test.__name__
             raise
-        else:
-            print '\tO %s' % test.__name__
 
     return callit
 

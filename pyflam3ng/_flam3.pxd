@@ -23,6 +23,13 @@
 
 ctypedef unsigned long size_t
 
+
+cdef extern from "string.h":
+    void *memset(void *s, int c, size_t n)
+    void *memmove(void *dest, void *src, size_t n)
+    size_t strlen(char *s)
+    char *strncpy(char *dest, char *src, size_t n)
+
 cdef enum:
     flam3_palette_random = (-1)
     flam3_palette_interpolated = (-2)
@@ -116,14 +123,6 @@ cdef enum:
     flam3_temporal_box = 0
     flam3_temporal_gaussian = 1
     flam3_temporal_exp = 2
-
-
-cdef extern from "string.h":
-    void *memset(void *s, int c, size_t n)
-    void *memmove(void *dest, void *src, size_t n)
-    size_t strlen(char *s)
-    char *strncpy(char *dest, char *src, size_t n)
-
 
 cdef extern from "flam3.h":
 
@@ -385,5 +384,6 @@ cdef extern from "flam3.h":
     void flam3_unflatten_genome(void *buf, flam3_genome *cp)
 
     void flam3_srandom()
+
 
 

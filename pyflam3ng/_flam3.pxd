@@ -157,105 +157,99 @@ cdef extern from "flam3.h":
        unsigned short *rowcols
 
     ctypedef struct flam3_xform:
-        pass
-#        double var[flam3_nvariations]
-#        double c[3][2]
-#        double post[3][2]
-#        double density
-#        double color[2]
-#        double symmetry
-#
-#        int padding
-#        double wind[2]
-#
-#        int precalc_sqrt_flag
-#        int precalc_angles_flag
-#        int precalc_atan_xy_flag
-#        int precalc_atan_yx_flag
-#
-#        double blob_low
-#        double blob_high
-#        double blob_waves
-#
-#        double pdj_a
-#        double pdj_b
-#        double pdj_c
-#        double pdj_d
-#
-#        double fan2_x
-#        double fan2_y
-#
-#        double rings2_val
-#
-#        double perspective_angle
-#        double perspective_dist
-#
-#        double juliaN_power
-#        double juliaN_dist
-#
-#        double juliaScope_power
-#        double juliaScope_dist
-#
-#        double radialBlur_angle
-#
-#        double pie_slices
-#        double pie_rotation
-#        double pie_thickness
-#
-#        double ngon_sides
-#        double ngon_power
-#        double ngon_circle
-#        double ngon_corners
-#
-#        double curl_c1
-#        double curl_c2
-#
-#        double rectangles_x
-#        double rectangles_y
-#
-#        double amw_amp
-#
-#        double disc2_rot
-#        double disc2_twist
-#
-#        double supershape_rnd
-#        double supershape_m
-#        double supershape_n1
-#        double supershape_n2
-#        double supershape_n3
-#        double supershape_holes
-#
-#        double flower_petals
-#        double flower_holes
-#
-#        double conic_eccen
-#        double conic_holes
-#
-#        double parabola_height
-#        double parabola_width
-#
-#        double persp_vsin
-#        double persp_vfcos
-#
-#        double juliaN_rN
-#        double juliaN_cn
-#
-#        double juliaScope_rN
-#        double juliaScope_cn
-#
-#        double radialBlur_spinvar
-#        double radialBlur_zoomvar
-#
-#        double waves_dx2
-#        double waves_dy2
-#
-#        double disc2_sinadd
-#        double disc2_cosadd
-#        double disc2_timespi
-#
-#        double supershape_pm_4
-#        double supershape_pneg1_n1
-#
+        double var[flam3_nvariations]
+        double c[3][2]
+        double post[3][2]
+        double density
+        double color[2]
+        double symmetry
+
+        int padding
+        double wind[2]
+
+        double blob_low
+        double blob_high
+        double blob_waves
+
+        double pdj_a
+        double pdj_b
+        double pdj_c
+        double pdj_d
+
+        double fan2_x
+        double fan2_y
+
+        double rings2_val
+
+        double perspective_angle
+        double perspective_dist
+
+        double juliaN_power
+        double juliaN_dist
+
+        double juliaScope_power
+        double juliaScope_dist
+
+        double radialBlur_angle
+
+        double pie_slices
+        double pie_rotation
+        double pie_thickness
+
+        double ngon_sides
+        double ngon_power
+        double ngon_circle
+        double ngon_corners
+
+        double curl_c1
+        double curl_c2
+
+        double rectangles_x
+        double rectangles_y
+
+        double amw_amp
+
+        double disc2_rot
+        double disc2_twist
+
+        double supershape_rnd
+        double supershape_m
+        double supershape_n1
+        double supershape_n2
+        double supershape_n3
+        double supershape_holes
+
+        double flower_petals
+        double flower_holes
+
+        double conic_eccen
+        double conic_holes
+
+        double parabola_height
+        double parabola_width
+
+        double persp_vsin
+        double persp_vfcos
+
+        double juliaN_rN
+        double juliaN_cn
+
+        double juliaScope_rN
+        double juliaScope_cn
+
+        double radialBlur_spinvar
+        double radialBlur_zoomvar
+
+        double waves_dx2
+        double waves_dy2
+
+        double disc2_sinadd
+        double disc2_cosadd
+        double disc2_timespi
+
+        double supershape_pm_4
+        double supershape_pneg1_n1
+
 #        int num_active_vars
 #        double active_var_weights[flam3_nvariations]
 #        int varFunc[flam3_nvariations]

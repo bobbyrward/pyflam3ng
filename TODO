@@ -1,3 +1,4 @@
+
 Needs tests:
     Genome.genome_index
     Genome.parent_fname
@@ -23,6 +24,7 @@ Needs tests:
     Genome.temporal_filter_type
     Genome.temporal_filter_width
     Genome.temporal_filter_exp
+    XForm.c
 
 
 Needs input clamping/checking:

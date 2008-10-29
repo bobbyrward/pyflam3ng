@@ -24,6 +24,7 @@
 cimport _flam3
 import xml.etree.cElementTree as etree
 import StringIO
+import os
 
 
 cdef int PyString_Check(object op):
@@ -60,6 +61,17 @@ cdef char* _create_str_copy(object source_str):
         raise MemoryError('Unable to allocate copy of input buffer')
 
     return strncpy(c_buffer_copy, c_string, string_len + 1)
+
+
+cdef int _fix_index(object list_type, int key):
+    if key < 0:
+        key += len(list_type)
+
+    if key < 0 or key >= len(list_type):
+        raise IndexError
+
+    return key
+
 
 
 cdef class ImageComments:
@@ -161,11 +173,105 @@ cdef void _initialize_genome_list(list genome_list):
             genome_list[idx].name = '%s-%d' % (genome_list[idx].parent_fname, idx)
 
 
+cdef class CoefficientsSubHelper:
+    cdef flam3_xform* _xform
+    cdef int _parent_index
+
+    cdef void set_xform(self, int parent_index, flam3_xform* xform):
+        self._xform = xform
+        self._parent_index = parent_index
+
+    def __len__(self):
+        return 2
+
+    def __getitem__(self, int key):
+        return self._xform.c[self._parent_index][_fix_index(self, key)]
+
+    def __setitem__(self, int key, int value):
+        self._xform.c[self._parent_index][_fix_index(self, key)] = value
+
+
+cdef class CoefficientsHelper:
+    cdef flam3_xform* _xform
+
+    cdef void set_xform(self, flam3_xform* xform):
+        self._xform = xform
+
+    def __len__(self):
+        return 3
+
+    def __getitem__(self, int key):
+        key = _fix_index(self, key)
+
+        cdef CoefficientsSubHelper sub = CoefficientsSubHelper()
+
+        sub.set_xform(key, self._xform)
+
+        return sub
+
+
+cdef class XForm:
+    cdef flam3_xform* _xform
+
+    def __cinit__(self):
+        pass
+
+    cdef void set_xform(self, flam3_xform* xform):
+        self._xform = xform
+
+
+    property c:
+        def __get__(self):
+            cdef CoefficientsHelper coeffs = CoefficientsHelper()
+
+            coeffs.set_xform(self._xform)
+
+            return coeffs
+
+
+#   double var[flam3_nvariations];   /* interp coefs between variations */
+#   double c[3][2];      /* the coefs to the affine part of the function */
+#   double post[3][2];   /* the post transform */
+#   double density;      /* probability that this function is chosen. 0 - 1 */
+#   double color[2];     /* color coords for this function. 0 - 1 */
+#   double symmetry;     /* 1=this is a symmetry xform, 0=not */
+#   
+#   int padding;/* Set to 1 for padding xforms */
+#   double wind[2]; /* winding numbers */
+
+
+cdef class _XFormProxy:
+    cdef flam3_genome* _parent
+
+    def __cinit__(self):
+        pass
+
+    cdef void set_genome(self, flam3_genome* parent):
+        self._parent = parent
+
+    def __len__(self):
+        return self._parent.num_xforms
+
+    def __getitem__(self, int key):
+        key = _fix_index(self, key)
+
+        cdef XForm xform
+
+        xform = XForm()
+        xform.set_xform(&self._parent.xform[key])
+
+        return xform
+
+
+
 cdef class Genome:
     cdef flam3_genome* _genome
+    cdef _XFormProxy _xforms
 
     def __cinit__(self, int num_xforms=0):
         self._genome = <flam3_genome*>_malloc(sizeof(flam3_genome));
+        self._xforms = _XFormProxy()
+        self._xforms.set_genome(self._genome)
 
         if num_xforms:
             flam3_add_xforms(self._genome, num_xforms, 0)
@@ -200,6 +306,24 @@ cdef class Genome:
                 fd.write(self.to_string())
 
     @classmethod
+    def from_file(cls, object filename=None, object file_like_object=None, object defaults=True):
+        cdef object content = ''
+
+        if file_like_object:
+            content = file_like_object.read()
+        elif filename:
+            fd = open(filename, 'rb')
+
+            try:
+                content = fd.read()
+            finally:
+                fd.close()
+        else:
+            raise IOError('Unable to open file')
+
+        return cls.from_string(content, os.path.basename(filename), defaults)
+
+    @classmethod
     def from_string(cls, object input_buffer, object filename='<unknown>', object defaults=True):
         cdef int ncps = 0
         cdef char* c_buffer_copy
@@ -222,13 +346,17 @@ cdef class Genome:
             genome_list.append(genome)
 
         ##NOTE: Don't free the input, flam3 already does this.
+        ##NOTE: Still need to free the result though.
         flam3_free(result)
 
         _initialize_genome_list(genome_list)
 
         return genome_list
 
-    from_string = classmethod(from_string)
+
+    property xforms:
+        def __get__(self):
+            return self._xforms
 
     property size:
         def __get__(self):
@@ -445,23 +573,39 @@ cdef class Genome:
         def __set__(self, double value):
             self._genome.gam_lin_thresh = value
 
-#
-#        int palette_index0
-#        double hue_rotation0
-#        int palette_index1
-#        double hue_rotation1
-#        double palette_blend
-#
-#        int temporal_filter_type
-#        double temporal_filter_width, temporal_filter_exp
-#        int num_xforms
-#        flam3_xform *xform
+    property temporal_filter_type:
+        def __get__(self):
+            return self._genome.temporal_filter_type
+
+        def __set__(self, int value):
+            self._genome.temporal_filter_type = value
+
+    property temporal_filter_width:
+        def __get__(self):
+            return self._genome.temporal_filter_width
+
+        def __set__(self, double value):
+            self._genome.temporal_filter_width = value
+
+    property temporal_filter_exp:
+        def __get__(self):
+            return self._genome.temporal_filter_exp
+
+        def __set__(self, double value):
+            self._genome.temporal_filter_exp = value
+
 #        int final_xform_index
 #        int final_xform_enable
 #        flam3_palette palette
 #        char *input_image
 #        int  palette_index
 #        double center[2]
+#        int palette_index0
+#        double hue_rotation0
+#        int palette_index1
+#        double hue_rotation1
+#        double palette_blend
+#
 
 
 

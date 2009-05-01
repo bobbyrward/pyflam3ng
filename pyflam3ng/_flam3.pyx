@@ -74,37 +74,6 @@ cdef int _fix_index(object list_type, int key):
 
 
 
-cdef class ImageComments:
-    cdef flam3_img_comments *_comments
-
-    def __cinit__(self):
-        self._comments = <flam3_img_comments*>_malloc(sizeof(flam3_img_comments))
-
-        self._comments.genome = ''
-        self._comments.badvals = ''
-        self._comments.numiters = ''
-        self._comments.rtime = ''
-
-    def __dealloc__(self):
-        flam3_free(self._comments)
-
-    property genome:
-        def __get__(self):
-            return self._comments.genome
-
-    property badvals:
-        def __get__(self):
-            return self._comments.badvals
-
-    property numiters:
-        def __get__(self):
-            return self._comments.numiters
-
-    property rtime:
-        def __get__(self):
-            return self._comments.rtime
-
-
 cdef class RenderStats:
     cdef stat_struct *_stats
 
@@ -274,7 +243,7 @@ cdef class Genome:
         self._xforms.set_genome(self._genome)
 
         if num_xforms:
-            flam3_add_xforms(self._genome, num_xforms, 0)
+            flam3_add_xforms(self._genome, num_xforms, 0, 0)
 
     cdef void copy_genome(self, flam3_genome* genome):
         memmove(self._genome, genome, sizeof(flam3_genome))
@@ -633,15 +602,17 @@ cdef class Palette:
         def __set__(self, val): self._smooth = val
 
     def __getitem__(self, key):
-        return (self._pal[key][0], self._pal[key][1], self._pal[key][2])
+        #return self._pal[key]
+        pass
 
     def __len__(self):
         return 256
 
     def __setitem__(self, key, val):
-        self._pal[key][0] = val[0]
-        self._pal[key][1] = val[1]
-        self._pal[key][2] = val[2]
+        #self._pal[key][0] = val[0]
+        #self._pal[key][1] = val[1]
+        #self._pal[key][2] = val[2]
+        pass
 
     def __iter__(self):
         return _PaletteIterator(self)
@@ -719,7 +690,7 @@ def standard_palette(int index=flam3_palette_random, double hue_rotation=0):
     
     pal = Palette()
     
-    flam3_get_palette(index, <double (*)[3]>&pal._pal, hue_rotation)
+    flam3_get_palette(index, pal._pal, hue_rotation)
 
     return pal
 

@@ -126,7 +126,11 @@ cdef enum:
 
 cdef extern from "flam3.h":
 
-    ctypedef double flam3_palette[256][3]
+    ctypedef struct flam3_palette_entry:
+        double index
+        double color[4]
+
+    ctypedef flam3_palette_entry flam3_palette[256]
 
     char *flam3_variation_names[]
 
@@ -326,7 +330,7 @@ cdef extern from "flam3.h":
 #typedef void (*flam3_iterator)(void *, double)
 
     int flam3_get_palette(int palette_index, flam3_palette p, double hue_rotation)
-    void flam3_add_xforms(flam3_genome *cp, int num_to_add, int interp_padding)
+    void flam3_add_xforms(flam3_genome *cp, int num_to_add, int interp_padding, int final_flag)
     void flam3_delete_xform(flam3_genome *thiscp, int idx_to_delete)
     void flam3_copy(flam3_genome *dest, flam3_genome *src)
     void flam3_copyx(flam3_genome *dest, flam3_genome *src, int num_std, int num_final)

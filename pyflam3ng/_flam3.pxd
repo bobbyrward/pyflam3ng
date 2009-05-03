@@ -30,6 +30,11 @@ cdef extern from "string.h":
     size_t strlen(char *s)
     char *strncpy(char *dest, char *src, size_t n)
 
+
+cdef extern from "Python.h":
+    int PyObject_AsWriteBuffer( object obj, void **buffer, Py_ssize_t *buffer_len)
+
+
 cdef enum:
     flam3_palette_random = (-1)
     flam3_palette_interpolated = (-2)
@@ -40,7 +45,7 @@ cdef enum:
     flam3_dont_print_edits = (0)
     flam3_variation_random = (-1)
     flam3_variation_random_fromspecified = (-2)
-    flam3_nvariations = 54
+    flam3_nvariations = 82
     flam3_nxforms = 12
     flam3_parent_fn_len = 30
     flam3_interpolation_linear = 0
@@ -52,6 +57,9 @@ cdef enum:
     flam3_palette_interpolation_hsv = 0
     flam3_palette_interpolation_sweep = 1
     flam3_max_action_length = 10000
+    flam3_field_both = 0
+    flam3_field_even = 1
+    flam3_field_odd = 2
     VAR_LINEAR = 0
     VAR_SINUSOIDAL = 1
     VAR_SPHERICAL = 2
@@ -383,5 +391,6 @@ cdef extern from "flam3.h":
 
     void flam3_srandom()
 
+    void flam3_colorhist(flam3_genome *cp, int num_batches, double *hist)
 
 

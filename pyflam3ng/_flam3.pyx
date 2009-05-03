@@ -323,6 +323,49 @@ cdef class Genome:
         return genome_list
 
 
+    def render(self, output_buffer, channels=3, transparent=False, ntemporal_samples=1, **kwargs):
+        transparent = 1 if transparent else 0
+
+        cdef Frame frame = Frame(**kwargs)
+        
+        frame = Frame(**kwargs)
+        frame._frame.genomes = self._genome
+        frame._frame.ngenomes = 1
+
+##        output_buffer = kwargs.get('buffer', None)
+##        if output_buffer:
+##            if isinstance(output_buffer, buffer):
+##                # standard write buffer objects
+##                # allows rendering directly to wxPython Images
+##                # through the DataBuffer object
+##                ptr = c_void_p()
+##                len = _pyapi.Py_ssize_t()
+##                _pyapi.PyObject_AsWriteBuffer(output_buffer, byref(ptr), byref(len))
+##                if len < (self.width * self.height * channels):
+##                    raise BufferTooSmallError("buffer isn't large enough")
+##                output_buffer = cast(ptr, POINTER(c_ubyte))
+##
+##            # otherwise...
+##            # try and pass it in, ctypes will tell us if it won't work
+##        else:
+##            output_buffer = allocate_output_buffer(self.size, channels)
+        cdef Py_ssize_t len
+        cdef void* ptr
+
+        if isinstance(output_buffer, buffer):
+            PyObject_AsWriteBuffer(output_buffer, &ptr, &len)
+
+            if len < (self._genome.width  * self._genome.height * channels):
+                raise RuntimeError('output_buffer isn\'t large enough')
+        else:
+            raise RuntimeError('output_buffer must be a writable buffer object')
+
+        cdef RenderStats stats = RenderStats()
+
+        flam3_render(frame._frame, ptr, self._genome.width, flam3_field_both, channels, transparent, stats._stats)
+
+        return stats
+
     property xforms:
         def __get__(self):
             return self._xforms
@@ -333,6 +376,20 @@ cdef class Genome:
 
         def __set__(self, value):
             self._genome.width, self._genome.height = value
+
+    property width:
+        def __get__(self):
+            return self._genome.width
+
+        def __set__(self, int value):
+            self._genome.width = value
+
+    property height:
+        def __get__(self):
+            return self._genome.height
+
+        def __set__(self, int value):
+            self._genome.height = value
 
     property rotation_center:
         def __get__(self):
@@ -696,6 +753,5 @@ def standard_palette(int index=flam3_palette_random, double hue_rotation=0):
 
 def random_seed(object seed=None):
     flam3_srandom()
-
 
 

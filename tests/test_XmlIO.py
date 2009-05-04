@@ -56,7 +56,7 @@ class TestCase(unittest.TestCase):
         xml = pyflam3ng.flam3_to_xml(genomes[0])
         self.assertTrue(xml)
 
-        xml = pyflam3ng.flam3_to_xml(genomes[1])
+        xml = pyflam3ng.flam3_to_xml(genomes[0])
         self.assertTrue(xml)
 
 

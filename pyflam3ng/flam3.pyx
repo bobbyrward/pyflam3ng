@@ -144,7 +144,7 @@ cdef class GenomeHandle:
         return other
 
 
-def flam3_from_xml(str xml_source, str filename='', object defaults=True):
+def from_xml(str xml_source, str filename='', object defaults=True):
     cdef flam3_genome *result
     cdef int ncps = 0
     cdef char *c_buffer_copy = _create_str_copy(xml_source)
@@ -163,7 +163,7 @@ def flam3_from_xml(str xml_source, str filename='', object defaults=True):
     return result_list
 
 
-def flam3_to_xml(GenomeHandle genome):
+def to_xml(GenomeHandle genome):
     cdef char* c_string = flam3_print_to_string(genome._genome)
     cdef str py_string = str(c_string)
 

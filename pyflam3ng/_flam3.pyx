@@ -782,7 +782,7 @@ def flam3_from_xml(str xml_source, str filename='', object defaults=True):
 
     result = flam3_parse_xml2(c_buffer_copy, filename, flam3_defaults_on if defaults else flam3_defaults_off, &ncps)
 
-    for 0 <= idx <= ncps:
+    for idx in range(ncps):
         handle = GenomeHandle()
         handle.copy_genome(&result[idx])
         result_list.append(handle)

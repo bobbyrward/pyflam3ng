@@ -791,3 +791,12 @@ def flam3_from_xml(str xml_source, str filename='', object defaults=True):
 
     return result_list
 
+
+def flam3_to_xml(GenomeHandle genome):
+    cdef char* c_string = flam3_print_to_string(genome._genome)
+    cdef str py_string = str(c_string)
+
+    flam3_free(c_string)
+
+    return py_string
+

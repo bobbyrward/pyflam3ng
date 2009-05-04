@@ -23,18 +23,19 @@
 
 cimport flam3
 
+flam3_nvariations = c_flam3_nvariations
+flam3_parent_fn_len = c_flam3_parent_fn_len
+flam3_name_len = c_flam3_name_len
+
 flam3_palette_random = (-1)
 flam3_palette_interpolated = (-2)
 flam3_defaults_on = (1)
 flam3_defaults_off = (0)
-flam3_name_len = 64
 flam3_print_edits = (1)
 flam3_dont_print_edits = (0)
 flam3_variation_random = (-1)
 flam3_variation_random_fromspecified = (-2)
-flam3_nvariations = 82
 flam3_nxforms = 12
-flam3_parent_fn_len = 30
 flam3_interpolation_linear = 0
 flam3_interpolation_smooth = 1
 flam3_inttype_linear = 0

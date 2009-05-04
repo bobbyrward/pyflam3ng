@@ -755,3 +755,21 @@ def random_seed(object seed=None):
     flam3_srandom()
 
 
+cdef class GenomeHandle:
+    cdef flam3_genome* _genome
+
+    def __cinit__(self):
+        self._genome = <flam3_genome*>_malloc(sizeof(flam3_genome));
+
+    cdef void copy_genome(self, flam3_genome* genome):
+        memmove(self._genome, genome, sizeof(flam3_genome))
+
+    def __dealloc(self):
+        flam3_free(self._genome)
+
+    def clone(self):
+        cdef GenomeHandle other = GenomeHandle()
+        flam3_copy(other._genome, self._genome)
+        return other
+
+

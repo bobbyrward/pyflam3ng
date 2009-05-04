@@ -26,7 +26,8 @@ import pyflam3ng
 from testing_util import print_test_name
 
 
-test_flam3 = """
+test_flam3 = [
+"""
 <test>
 <flame time="0" palette="15" size="640 480" center="0 0" scale="240" zoom="0" oversample="1" filter="1" quality="10" background="0 0 0" brightness="4" gamma="4" vibrancy="1" hue="0.22851">
    <xform weight="0.25" color="1" spherical="1" coefs="-0.681206 -0.0779465 0.20769 0.755065 -0.0416126 -0.262334"/>
@@ -34,6 +35,8 @@ test_flam3 = """
    <xform weight="0.25" color="0.33" spherical="1" coefs="0.840613 -0.816191 0.318971 -0.430402 0.905589 0.909402"/>
    <xform weight="0.25" color="0" spherical="1" coefs="0.960492 -0.466555 0.215383 -0.727377 -0.126074 0.253509"/>
 </flame>
+""",
+"""
 <flame time="100" palette="29" size="640 480" center="0 0" scale="240" zoom="0" oversample="1" filter="1" quality="10" background="0 0 0" brightness="4" gamma="4" vibrancy="1" hue="0.147038">
    <xform weight="0.25" color="1" spherical="1" coefs="-0.357523 0.774667 0.397446 0.674359 -0.730708 0.812876"/>
    <xform weight="0.25" color="0.66" spherical="1" coefs="-0.69942 0.141688 -0.743472 0.475451 -0.336206 0.0958816"/>
@@ -41,13 +44,21 @@ test_flam3 = """
    <xform weight="0.25" color="0" spherical="1" coefs="0.992697 0.433488 -0.427202 -0.339112 -0.507145 0.120765"/>
 </flame>
 </test>
-"""
+""",
+]
 
 class TestCase(unittest.TestCase):
     @print_test_name
-    def testFromXml(self):
-        genomes = pyflam3ng.flam3_from_xml(test_flam3)
+    def testToFromXml(self):
+        genomes = pyflam3ng.flam3_from_xml(''.join(test_flam3))
         self.assertEqual(len(genomes), 2)
+
+        xml = pyflam3ng.flam3_to_xml(genomes[0])
+        self.assertTrue(xml)
+
+        xml = pyflam3ng.flam3_to_xml(genomes[1])
+        self.assertTrue(xml)
+
 
 
 

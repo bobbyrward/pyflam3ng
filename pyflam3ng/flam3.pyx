@@ -21,7 +21,7 @@
 #  Boston, MA 02111-1307, USA.
 ##############################################################################
 
-cimport _flam3
+cimport flam3
 import xml.etree.cElementTree as etree
 import StringIO
 import os

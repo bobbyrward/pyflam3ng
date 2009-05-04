@@ -31,7 +31,7 @@ test:
 
 clean:
 	-rm -r build 
-	-rm pyflam3ng/_flam3.c 
-	-rm pyflam3ng/_flam3.so
+	-rm pyflam3ng/flam3.c 
+	-rm pyflam3ng/flam3.so
 	-rm test.*
 	find ./ -name '*.pyc' -delete

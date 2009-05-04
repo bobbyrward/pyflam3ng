@@ -21,7 +21,7 @@
 #  Boston, MA 02111-1307, USA.
 ##############################################################################
 
-from _flam3 import *
+from flam3 import *
 
 from collections import defaultdict
 

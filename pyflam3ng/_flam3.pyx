@@ -773,3 +773,21 @@ cdef class GenomeHandle:
         return other
 
 
+def flam3_from_xml(str xml_source, str filename='', object defaults=True):
+    cdef flam3_genome *result
+    cdef int ncps = 0
+    cdef char *c_buffer_copy = _create_str_copy(xml_source)
+    cdef list result_list = list()
+    cdef GenomeHandle handle
+
+    result = flam3_parse_xml2(c_buffer_copy, filename, flam3_defaults_on if defaults else flam3_defaults_off, &ncps)
+
+    for 0 <= idx <= ncps:
+        handle = GenomeHandle()
+        handle.copy_genome(&result[idx])
+        result_list.append(handle)
+
+    flam3_free(result)
+
+    return result_list
+

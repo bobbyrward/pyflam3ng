@@ -126,6 +126,31 @@ flam3_temporal_gaussian = 1
 flam3_temporal_exp = 2
 
 
+cdef int PyString_Check(object op):
+    return isinstance(op, str)
+
+
+cdef void* _malloc(size):
+    cdef void *p = flam3_malloc(size)
+    return memset(p, 0, size)
+
+
+#Return value needs to be freed using flam3_free
+cdef char* _create_str_copy(object source_str):
+    if not PyString_Check(source_str) or source_str is None:
+        raise TypeError("Expected a string value received %r" % source_str)
+
+    cdef int string_len = strlen(source_str)
+
+    cdef char* c_string = source_str
+    cdef char* c_buffer_copy = <char*>flam3_malloc(string_len + 1)
+
+    if c_buffer_copy == NULL:
+        raise MemoryError('Unable to allocate copy of input buffer')
+
+    return strncpy(c_buffer_copy, c_string, string_len + 1)
+
+
 def random_seed():
     flam3_srandom()
 

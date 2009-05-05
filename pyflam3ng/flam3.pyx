@@ -48,6 +48,9 @@ flam3_max_action_length = 10000
 flam3_field_both = 0
 flam3_field_even = 1
 flam3_field_odd = 2
+flam3_palette_mode_step   = 0
+flam3_palette_mode_linear = 1
+
 
 VAR_LINEAR = 0
 VAR_SINUSOIDAL = 1

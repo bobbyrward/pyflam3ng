@@ -1,5 +1,5 @@
 *.pyc
 build/*
-pyflam3ng/flam3.c
-pyflam3ng/flam3.so
+pyflam3ng/*.c
+pyflam3ng/*.so
 

@@ -22,214 +22,267 @@
 ##############################################################################
 
 import flam3
+import numpy
+import itertools
+
 from lxml import etree
 
 def load_flame(xml_source=None, fd=None, filename=None):
-    if filename:
+    if filename is not None:
         fd = open(filename)
 
     try:
-        if fd:
+        if fd is not None:
             xml_source = fd.read()
     finally:
-        if filename:
+        if filename is not None:
             fd.close()
 
     tree = etree.fromstring(xml_source)
     genome_nodes = tree.xpath('//flame')
 
-    return [Genome(flame_node=node) for node in genome_nodes]
+    return [load_genome(flame_node=node) for node in genome_nodes]
 
 
 def load_genome(flame_node=None, xml_source=None, genome_handle=None):
     if xml_source:
         flame_node = etree.fromstring(xml_source).xpath('//flame')[0]
 
-    if flame_node:
+    if flame_node is not None:
         return Genome(flame_node=flame_node)
-    elif genome_handle:
+    elif genome_handle is not None:
         return Genome(genome_handle=genome_handle)
     else:
         return None
 
 
+class Point(object):
+    def __init__(self, x=0.0, y=0.0):
+        self.x = x
+        self.y = y
+
+    def __iter__(self):
+        yield self.x
+        yield self.y
+
+    def __repr__(self):
+        return '<Point x=%f y=%f>' % (self.x, self.y)
+
+
+class Palette(object):
+    def __init__(self):
+        self.array = numpy.zeros((256), [('r', numpy.uint8), ('g', numpy.uint8), ('b', numpy.uint8)])
+
+
 class Genome(object):
-    def __init__(self, flame_node=None, xml_source=None, genome_handle=None):
-        initialization = """
-        cp->palette_index = flam3_palette_random;
-        cp->center[0] = 0.0;
-        cp->center[1] = 0.0;
-        cp->rot_center[0] = 0.0;
-        cp->rot_center[1] = 0.0;
-        cp->gamma = 4.0;
-        cp->vibrancy = 1.0;
-        cp->contrast = 1.0;
-        cp->brightness = 4.0;
-        cp->symmetry = 0;
-        cp->hue_rotation = 0.0;
-        cp->rotate = 0.0;
-        cp->pixels_per_unit = 50;
-        cp->interpolation = flam3_interpolation_linear;
-        cp->palette_interpolation = flam3_palette_interpolation_hsv;
+    def __init__(self, flame_node=None, genome_handle=None):
+        self.set_defaults()
 
-        cp->genome_index = 0;
-        memset(cp->parent_fname,0,flam3_parent_fn_len);
+        if flame_node is not None:
+            self._init_from_node(flame_node)
+        elif genome_handle is not None:
+            self._init_from_handle(genome_handle)
 
-        if (default_flag==flam3_defaults_on) {
-           /* If defaults are on, set to reasonable values */
-           cp->highlight_power = -1.0;
-           cp->background[0] = 0.0;
-           cp->background[1] = 0.0;
-           cp->background[2] = 0.0;
-           cp->width = 100;
-           cp->height = 100;
-           cp->spatial_oversample = 1;
-           cp->spatial_filter_radius = 0.5;
-           cp->zoom = 0.0;
-           cp->sample_density = 1;
-           /* Density estimation stuff defaulting to ON */
-           cp->estimator = 9.0;
-           cp->estimator_minimum = 0.0;
-           cp->estimator_curve = 0.4;
-           cp->gam_lin_thresh = 0.01;
-    //       cp->motion_exp = 0.0;
-           cp->nbatches = 1;
-           cp->ntemporal_samples = 1000;
-           cp->spatial_filter_select = flam3_gaussian_kernel;
-           cp->interpolation_type = flam3_inttype_log;
-           cp->temporal_filter_type = flam3_temporal_box;
-           cp->temporal_filter_width = 1.0;
-           cp->temporal_filter_exp = 0.0;
-           cp->palette_mode = flam3_palette_mode_step;
+    def set_defaults(self):
+        self.time = 0.0
 
-        } else {
-        """
+        self.palette_index = flam3.flam3_palette_random
+
+        self.center = numpy.zeros(1, [('x', numpy.float32), ('y', numpy.float32)])
+
+        self.gamma = 4.0
+        self.vibrancy = 1.0
+        self.contrast = 1.0
+        self.brightness = 4.0
+
+        self.symmetry = 0
+
+        self.hue_rotation = 0.0
+        self.rotate = 0.0
+
+        self.pixels_per_unit = 50
+        self.interpolation = flam3.flam3_interpolation_linear
+        self.palette_interpolation = flam3.flam3_palette_interpolation_hsv
+
+        self.highlight_power = -1.0
+
+        self.background = numpy.zeros(1, [('r', numpy.uint8), ('g', numpy.uint8), ('b', numpy.uint8)])
+
+        self.width = 100
+        self.height = 100
+
+        self.spatial_oversample = 1
+        self.spatial_filter_radius = 0.5
+
+        self.zoom = 0.0
+
+        self.sample_density = 1
+
+        self.estimator = 9.0
+        self.estimator_minimum = 0.0
+        self.estimator_curve = 0.4
+
+        self.gam_lin_thresh = 0.01
+
+        self.nbatches = 1
+
+        self.ntemporal_samples = 1000
+
+        self.spatial_filter_select = flam3.flam3_gaussian_kernel
+
+        self.interpolation_type = flam3.flam3_inttype_log
+
+        self.temporal_filter_type = flam3.flam3_temporal_box
+        self.temporal_filter_width = 1.0
+        self.temporal_filter_exp = 0.0
+
+        self.palette_mode = flam3.flam3_palette_mode_step
+
 
     def _init_from_node(self, flame_node):
         self.flame_node = flame_node
+        self._refresh_handle_from_self()
+        self._refresh_self_from_handle()
 
     def _init_from_handle(self, genome_handle):
         self.genome_handle = genome_handle
         self._refresh_self_from_handle()
 
     def _refresh_handle_from_self(self):
-        self.genome_handle = flam3.from_xml(etree.tostring(self.flame_node))
+        self.genome_handle = flam3.from_xml(etree.tostring(self.flame_node))[0]
 
     def _refresh_self_from_handle(self):
         xml_source = flam3.to_xml(self.genome_handle)
-        self.flame_node = etree.fromstring(xml_source).getroot()
+        self.flame_node = etree.fromstring(xml_source)
         attrib = self.flame_node.attrib
 
-        self.time = float(attrib.get('time', 0))
-        self.width, self.height = map(int, attrib.get('size').split(' '))
-        self.center_x, self.center_y = map(float, attrib.get('center').split(' '))
-        self.pixels_per_unit = float(attrib.get('scale'))
-        self.zoom = float(attrib.get('zoom', 0))
-        self.rotate = float(attrib.get('rotate',
+        def scalar_attrib(src_name, dest_name=None, coerce_type=float):
+            if src_name in self.flame_node.attrib:
+                setattr(self, dest_name if dest_name else src_name,
+                        coerce_type(self.flame_node.attrib[src_name]))
 
-        self.interpolation = {
+        def whitespace_array(src_name, coerce_type=float):
+            return map(coerce_type, attrib.get(src_name).split(' '))
+
+        def mapped_attrib(src_name, dest_name=None, mapping={}):
+            if src_name in self.flame_node.attrib:
+                setattr(self, dest_name if dest_name else src_name,
+                        mapping[self.flame_node.attrib[src_name]])
+
+        self.width, self.height = whitespace_array('size', int)
+
+        self.center.fill(buffer(numpy.array(whitespace_array('center'))))
+        self.background.fill(buffer(numpy.array(whitespace_array('background'))))
+
+        scalar_attrib('time')
+        scalar_attrib('scale', 'pixels_per_unit')
+        scalar_attrib('zoom')
+        scalar_attrib('rotate')
+        scalar_attrib('filter', 'spatial_filter_radius')
+        scalar_attrib('temporal_filter_width')
+        scalar_attrib('quality', 'sample_density')
+        scalar_attrib('passes', 'nbatches')
+        scalar_attrib('temporal_samples', 'ntemporal_samples')
+        scalar_attrib('brightness')
+        scalar_attrib('gamma')
+        scalar_attrib('highlight_power')
+        scalar_attrib('vibrancy')
+        scalar_attrib('estimator_radius', 'estimator')
+        scalar_attrib('estimator_minimum')
+        scalar_attrib('estimator_curve')
+        scalar_attrib('gamma_threshold', 'gam_lin_thresh')
+
+        scalar_attrib('supersample', 'spatial_oversample', int)
+
+        mapped_attrib('interpolation', mapping={
             'linear': flam3.flam3_interpolation_linear,
             'smooth': flam3.flam3_interpolation_smooth,
-        }[attrib.get('interpolation', 'linear')]
+        })
 
-
-        self.palette_interpolation = {
+        mapped_attrib('palette_interpolation', mapping={
             'hsv': flam3.flam3_palette_interpolation_hsv,
             'sweep': flam3.flam3_palette_interpolation_sweep,
-        }[attrib.get('palette_interpolation', 'hsv')]
+        })
 
-flam3_node_attributes = """
-   if (cp->flame_name[0]!=0)
-      fprintf(f, " name=\"%s\"",cp->flame_name);
+        mapped_attrib('filter_shape', 'spatial_filter_select', mapping={
+            'gaussian': flam3.flam3_gaussian_kernel,
+            'hermite': flam3.flam3_hermite_kernel,
+            'box': flam3.flam3_box_kernel,
+            'triangle': flam3.flam3_triangle_kernel,
+            'bell': flam3.flam3_bell_kernel,
+            'bspline': flam3.flam3_b_spline_kernel,
+            'mitchell': flam3.flam3_mitchell_kernel,
+            'blackman': flam3.flam3_blackman_kernel,
+            'catrom': flam3.flam3_catrom_kernel,
+            'hanning': flam3.flam3_hanning_kernel,
+            'hamming': flam3.flam3_hamming_kernel,
+            'lanczos3': flam3.flam3_lanczos3_kernel,
+            'lanczos2': flam3.flam3_lanczos2_kernel,
+            'quadratic': flam3.flam3_quadratic_kernel,
+        })
 
-   fprintf(f, " rotate=\"%g\"", cp->rotate);
-   fprintf(f, " supersample=\"%d\"", cp->spatial_oversample);
-   fprintf(f, " filter=\"%g\"", cp->spatial_filter_radius);
+        mapped_attrib('temporal_filter_type', mapping={
+            'box': flam3.flam3_temporal_box,
+            'gaussian': flam3.flam3_temporal_gaussian,
+            'exp': flam3.flam3_temporal_exp,
+        })
 
+
+        mapped_attrib('palette_mode', mapping={
+            'step': flam3.flam3_palette_mode_step,
+            'linear': flam3.flam3_palette_mode_linear,
+        })
+
+        mapped_attrib('interpolation', mapping={
+            'smooth': flam3.flam3_interpolation_linear,
+        })
+
+        mapped_attrib('interpolation_type', mapping={
+            'linear': flam3.flam3_inttype_linear,
+            'log': flam3.flam3_inttype_log,
+            'old': flam3.flam3_inttype_compat,
+            'older': flam3.flam3_inttype_older,
+        })
+
+        mapped_attrib('palette_interpolation', mapping={
+            'sweep': flam3.flam3_palette_interpolation_hsv ,
+        })
+
+flam3_print_to_file = """
    /* Need to print the correct kernel to use */
-   if (cp->spatial_filter_select == flam3_gaussian_kernel)
-      fprintf(f, " filter_shape=\"gaussian\"");
-   else if (cp->spatial_filter_select == flam3_hermite_kernel)
-      fprintf(f, " filter_shape=\"hermite\"");
-   else if (cp->spatial_filter_select == flam3_box_kernel)
-      fprintf(f, " filter_shape=\"box\"");
-   else if (cp->spatial_filter_select == flam3_triangle_kernel)
-      fprintf(f, " filter_shape=\"triangle\"");
-   else if (cp->spatial_filter_select == flam3_bell_kernel)
-      fprintf(f, " filter_shape=\"bell\"");
-   else if (cp->spatial_filter_select == flam3_b_spline_kernel)
-      fprintf(f, " filter_shape=\"bspline\"");
-   else if (cp->spatial_filter_select == flam3_mitchell_kernel)
-      fprintf(f, " filter_shape=\"mitchell\"");
-   else if (cp->spatial_filter_select == flam3_blackman_kernel)
-      fprintf(f, " filter_shape=\"blackman\"");
-   else if (cp->spatial_filter_select == flam3_catrom_kernel)
-      fprintf(f, " filter_shape=\"catrom\"");
-   else if (cp->spatial_filter_select == flam3_hanning_kernel)
-      fprintf(f, " filter_shape=\"hanning\"");
-   else if (cp->spatial_filter_select == flam3_hamming_kernel)
-      fprintf(f, " filter_shape=\"hamming\"");
-   else if (cp->spatial_filter_select == flam3_lanczos3_kernel)
-      fprintf(f, " filter_shape=\"lanczos3\"");
-   else if (cp->spatial_filter_select == flam3_lanczos2_kernel)
-      fprintf(f, " filter_shape=\"lanczos2\"");
-   else if (cp->spatial_filter_select == flam3_quadratic_kernel)
-      fprintf(f, " filter_shape=\"quadratic\"");
 
-   if (cp->temporal_filter_type == flam3_temporal_box)
-      fprintf(f, " temporal_filter_type=\"box\"");
-   else if (cp->temporal_filter_type == flam3_temporal_gaussian)
-      fprintf(f, " temporal_filter_type=\"gaussian\"");
-   else if (cp->temporal_filter_type == flam3_temporal_exp)
-      fprintf(f, " temporal_filter_type=\"exp\" temporal_filter_exp=\"%g\"",cp->temporal_filter_exp);
 
-   fprintf(f, " temporal_filter_width=\"%g\"",cp->temporal_filter_width);
+        if (cp->symmetry)
+          fprintf(f, "   <symmetry kind=\"%d\"/>\n", cp->symmetry);
+
+        numstd = cp->num_xforms - (cp->final_xform_index>=0);
+
+        for (i = 0; i < cp->num_xforms; i++) {
+
+          if (i==cp->final_xform_index)
+             flam3_print_xform(f, &cp->xform[i], 1, numstd, NULL, 0);
+          else
+             flam3_print_xform(f, &cp->xform[i], 0, numstd, cp->chaos[i], 0);
+
+        }
+
+        for (i = 0; i < 256; i++) {
+          double r, g, b;
+          r = (cp->palette[i].color[0] * 255.0);
+          g = (cp->palette[i].color[1] * 255.0);
+          b = (cp->palette[i].color[2] * 255.0);
+          if (getenv("intpalette"))
+             fprintf(f, "   <color index=\"%d\" rgb=\"%d %d %d\"/>\n", i, (int)rint(r), (int)rint(g), (int)rint(b));
+          else {
+        #ifdef USE_FLOAT_INDICES
+             fprintf(f, "   <color index=\"%.10g\" rgb=\"%.6g %.6g %.6g\"/>\n", cp->palette[i].index, r, g, b);
+        #else
+             fprintf(f, "   <color index=\"%d\" rgb=\"%.6g %.6g %.6g\"/>\n", i, r, g, b);
+        #endif
+          }
+        }
 
 
 
-   fprintf(f, " quality=\"%g\"", cp->sample_density);
-   fprintf(f, " passes=\"%d\"", cp->nbatches);
-   fprintf(f, " temporal_samples=\"%d\"", cp->ntemporal_samples);
-   fprintf(f, " background=\"%g %g %g\"",
-      cp->background[0], cp->background[1], cp->background[2]);
-   fprintf(f, " brightness=\"%g\"", cp->brightness);
-   fprintf(f, " gamma=\"%g\"", cp->gamma);
-
-   if (!flam27_flag)
-      fprintf(f, " highlight_power=\"%g\"", cp->highlight_power);
-
-   fprintf(f, " vibrancy=\"%g\"", cp->vibrancy);
-   fprintf(f, " estimator_radius=\"%g\" estimator_minimum=\"%g\" estimator_curve=\"%g\"",
-      cp->estimator, cp->estimator_minimum, cp->estimator_curve);
-   fprintf(f, " gamma_threshold=\"%g\"", cp->gam_lin_thresh);
-
-   if (flam3_palette_mode_step == cp->palette_mode)
-      fprintf(f, " palette_mode=\"step\"");
-   else if (flam3_palette_mode_linear == cp->palette_mode)
-      fprintf(f, " palette_mode=\"linear\"");
-
-   if (flam3_interpolation_linear != cp->interpolation)
-       fprintf(f, " interpolation=\"smooth\"");
-
-   if (flam3_inttype_linear == cp->interpolation_type)
-       fprintf(f, " interpolation_type=\"linear\"");
-   else if (flam3_inttype_log == cp->interpolation_type)
-       fprintf(f, " interpolation_type=\"log\"");
-   else if (flam3_inttype_compat == cp->interpolation_type)
-       fprintf(f, " interpolation_type=\"old\"");
-   else if (flam3_inttype_older == cp->interpolation_type)
-       fprintf(f, " interpolation_type=\"older\"");
-
-
-   if (flam3_palette_interpolation_hsv != cp->palette_interpolation)
-       fprintf(f, " palette_interpolation=\"sweep\"");
-
-   if (extra_attributes)
-      fprintf(f, " %s", extra_attributes);
-
-   fprintf(f, ">\n");
-
-   if (cp->symmetry)
-      fprintf(f, "   <symmetry kind=\"%d\"/>\n", cp->symmetry);
 """
 

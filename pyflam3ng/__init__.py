@@ -258,41 +258,24 @@ class Genome(object):
         if sym_node:
             scalar_attrib('symmetry', coerce_type=int, node=sym_node[0])
 
+        self.palette = Palette()
+
+        for color_node in self.flame_node.xpath('//color'):
+            # should this be int(math.floor(float(... ?
+            #TODO: This loses all the float palette entries from flam3.  Is this what we want?
+            index = int(float(color_node.attrib['index']))
+            rgb = map(int, whitespace_array('rgb', node=color_node))
+
+            self.palette.array[index].fill(rgb)
+
 flam3_print_to_file = """
-   /* Need to print the correct kernel to use */
-
-
-        if (cp->symmetry)
-          fprintf(f, "   <symmetry kind=\"%d\"/>\n", cp->symmetry);
-
         numstd = cp->num_xforms - (cp->final_xform_index>=0);
-
         for (i = 0; i < cp->num_xforms; i++) {
-
           if (i==cp->final_xform_index)
              flam3_print_xform(f, &cp->xform[i], 1, numstd, NULL, 0);
           else
              flam3_print_xform(f, &cp->xform[i], 0, numstd, cp->chaos[i], 0);
 
         }
-
-        for (i = 0; i < 256; i++) {
-          double r, g, b;
-          r = (cp->palette[i].color[0] * 255.0);
-          g = (cp->palette[i].color[1] * 255.0);
-          b = (cp->palette[i].color[2] * 255.0);
-          if (getenv("intpalette"))
-             fprintf(f, "   <color index=\"%d\" rgb=\"%d %d %d\"/>\n", i, (int)rint(r), (int)rint(g), (int)rint(b));
-          else {
-        #ifdef USE_FLOAT_INDICES
-             fprintf(f, "   <color index=\"%.10g\" rgb=\"%.6g %.6g %.6g\"/>\n", cp->palette[i].index, r, g, b);
-        #else
-             fprintf(f, "   <color index=\"%d\" rgb=\"%.6g %.6g %.6g\"/>\n", i, r, g, b);
-        #endif
-          }
-        }
-
-
-
 """
 

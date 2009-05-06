@@ -252,6 +252,12 @@ class Genome(object):
             'sweep': flam3.flam3_palette_interpolation_hsv ,
         })
 
+
+        sym_node = self.flame_node.xpath('//symmetry')
+
+        if sym_node:
+            scalar_attrib('symmetry', coerce_type=int, node=sym_node[0])
+
 flam3_print_to_file = """
    /* Need to print the correct kernel to use */
 

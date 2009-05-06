@@ -21,8 +21,8 @@
 #  Boston, MA 02111-1307, USA.
 ##############################################################################
 
-import .flam3
-import .util
+from . import flam3
+from . import util
 import numpy
 import itertools
 
@@ -75,7 +75,7 @@ class Palette(object):
         self.array = numpy.zeros((256,3), numpy.uint8)
 
     def smooth(self, ntries=50, trysize=10000):
-        self.array = util.palette_improve)
+        self.array = util.palette_improve()
 
 
 class Genome(object):

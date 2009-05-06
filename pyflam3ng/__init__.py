@@ -101,6 +101,128 @@ class Point(object):
         return '<Point x=%f y=%f>' % (self.x, self.y)
 
 
+class Variations(object):
+    """Wraps the variations in use by an XForm"""
+
+    def __init__(self):
+        self.values = {}
+        self.variables = {
+            'blob': {
+                'low': 0.0,
+                'high': 1.0,
+                'waves': 1.0,
+            },
+            'pdj': {
+                'a': 0.0,
+                'b': 0.0,
+                'c': 0.0,
+                'd': 0.0,
+            },
+            'fan2': {
+                'x': 0.0,
+                'y': 1.0,
+            },
+            'rings2': {
+                'val': 0.0,
+            },
+            'perspective': {
+                'angle': 0.0,
+                'dist': 0.0,
+            },
+            'julian': {
+                'power': 1.0,
+                'dist': 1.0,
+            },
+            'juliascope': {
+                'power': 1.0,
+                'dist': 1.0,
+            },
+            'radialblur': {
+                'angle': 0.0,
+            },
+            'pie': {
+                'slices': 6.0,
+                'rotation': 0.0,
+                'thickness': 0.5,
+            },
+            'ngon': {
+                'sides': 5.0,
+                'power': 3.0,
+                'circle': 1.0,
+                'corners': 2.0,
+            },
+            'curl': {
+                'c1': 1.0,
+                'c2': 0.0,
+            },
+            'rectangles': {
+                'x': 1.0,
+                'y': 1.0,
+            },
+            'disc2': {
+                'rot': 0.0,
+                'twist': 0.0,
+            },
+            'supershape': {
+                'rnd': 0.0,
+                'm': 0.0,
+                'n1': 1.0,
+                'n2': 1.0,
+                'n3': 1.0,
+                'holes': 0.0,
+            },
+            'flower': {
+                'petals': 0.0,
+                'holes': 0.0,
+            },
+            'conic': {
+                'eccentricity': 1.0,
+                'holes': 0.0,
+            },
+            'parabola': {
+                'height': 0.0,
+                'width': 0.0,
+            },
+        }
+
+    def __getitem__(self, key):
+        return self.values[key]
+
+    def __setitem__(self, key, value):
+        self.values[key] = value
+
+    def __delitem__(self, key):
+        del self.values[key]
+
+    def variation_vars(self, variation_name=None):
+        if variation_name in self.variables:
+            return self.variables[variation_name]
+        else:
+            return dict()
+
+    def set_variable(self, variation_name, variable_name, value):
+        if variation_name in self.variables:
+            vars = self.variables[variation_name]
+
+            if variable_name in vars:
+                vars[variable_name] = value
+            else:
+                raise KeyError('Unknown variable')
+        else:
+            raise KeyError('Unknown variation')
+
+    def get_variable(self, variation_name, variable_name, value):
+        if variation_name in self.variables:
+            vars = self.variables[variation_name]
+
+            if variable_name in vars:
+                return vars[variable_name]
+            else:
+                raise KeyError('Unknown variable')
+        else:
+            raise KeyError('Unknown variation')
+
+
 class Palette(object):
     def __init__(self):
         self.array = numpy.zeros((256,3), numpy.uint8)

@@ -173,6 +173,16 @@ cdef class GenomeHandle:
         return other
 
 
+def get_variation_list():
+    cdef list var_list = list()
+    cdef int idx
+
+    for idx in range(flam3_nvariations):
+        var_list.append(flam3_variation_names[idx])
+
+    return var_list
+
+
 def from_xml(str xml_source, str filename='', object defaults=True):
     cdef flam3_genome *result
     cdef int ncps = 0

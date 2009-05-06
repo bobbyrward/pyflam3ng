@@ -20,15 +20,29 @@
 #  the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 #  Boston, MA 02111-1307, USA.
 ##############################################################################
+import itertools
+from collections import defaultdict
+
+from lxml import etree
+import numpy
 
 from . import flam3
 from . import util
-import numpy
-import itertools
-
-from lxml import etree
 
 def load_flame(xml_source=None, fd=None, filename=None):
+    """Load a set of genomes from an xml document
+
+    If filename is specified:
+        Loads the genomes from the file
+
+    If fd is specified:
+        Loads the genomes from the filelike object
+
+    If xml_source is specified:
+        Loads the genomes directly from the string
+
+    Parameters are tested in this order
+    """
     if filename is not None:
         fd = open(filename)
 
@@ -46,6 +60,21 @@ def load_flame(xml_source=None, fd=None, filename=None):
 
 
 def load_genome(flame_node=None, xml_source=None, genome_handle=None):
+    """Load a genome from a variety of sources
+
+    If xml_source is specified:
+        Loads the genome directly from the string
+
+    If flame_node is speficied:
+        Loads the genome from the lxml.etree.Element
+
+    If gnome_handle is specified:
+        Loads the genomes from the pyflam3ng.flam3.GenomeHandle
+
+    If none are specified, returns None
+
+    Parameters are tested in this order
+    """
     if xml_source:
         flame_node = etree.fromstring(xml_source).xpath('//flame')[0]
 
@@ -58,6 +87,8 @@ def load_genome(flame_node=None, xml_source=None, genome_handle=None):
 
 
 class Point(object):
+    """A 2d point in cartesian space"""
+
     def __init__(self, x=0.0, y=0.0):
         self.x = x
         self.y = y
@@ -267,15 +298,4 @@ class Genome(object):
             rgb = map(int, whitespace_array('rgb', node=color_node))
 
             self.palette.array[index].fill(rgb)
-
-flam3_print_to_file = """
-        numstd = cp->num_xforms - (cp->final_xform_index>=0);
-        for (i = 0; i < cp->num_xforms; i++) {
-          if (i==cp->final_xform_index)
-             flam3_print_xform(f, &cp->xform[i], 1, numstd, NULL, 0);
-          else
-             flam3_print_xform(f, &cp->xform[i], 0, numstd, cp->chaos[i], 0);
-
-        }
-"""
 

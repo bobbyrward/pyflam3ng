@@ -160,18 +160,18 @@ class Genome(object):
         self.flame_node = etree.fromstring(xml_source)
         attrib = self.flame_node.attrib
 
-        def scalar_attrib(src_name, dest_name=None, coerce_type=float):
-            if src_name in self.flame_node.attrib:
+        def scalar_attrib(src_name, dest_name=None, coerce_type=float, node=self.flame_node):
+            if src_name in node.attrib:
                 setattr(self, dest_name if dest_name else src_name,
-                        coerce_type(self.flame_node.attrib[src_name]))
+                        coerce_type(node.attrib[src_name]))
 
-        def whitespace_array(src_name, coerce_type=float):
-            return map(coerce_type, attrib.get(src_name).split(' '))
+        def whitespace_array(src_name, coerce_type=float, node=self.flame_node):
+            return map(coerce_type, node.attrib.get(src_name).split(' '))
 
-        def mapped_attrib(src_name, dest_name=None, mapping={}):
-            if src_name in self.flame_node.attrib:
+        def mapped_attrib(src_name, dest_name=None, mapping={}, node=self.flame_node):
+            if src_name in node.attrib:
                 setattr(self, dest_name if dest_name else src_name,
-                        mapping[self.flame_node.attrib[src_name]])
+                        mapping[node.attrib[src_name]])
 
         self.width, self.height = whitespace_array('size', int)
 

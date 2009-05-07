@@ -445,6 +445,11 @@ class Xform(object):
                 setattr(self, dest_name if dest_name else src_name,
                         coerce_type(node.attrib[src_name]))
 
+
+        def whitespace_array(src_name, coerce_type=float, node=xform_node):
+            return map(coerce_type, node.attrib.get(src_name).split(' '))
+
+
         scalar_attrib('weight')
         self.color = 0.0
         scalar_attrib('color')
@@ -455,13 +460,15 @@ class Xform(object):
         self.opacity = 1.0
         scalar_attrib('opacity')
 
+        coefs_list = whitespace_array('coefs')
+        self._x = Point(coefs_list[0], coefs_list[1])
+        self._y = Point(coefs_list[2], coefs_list[3])
+        self._o = Point(coefs_list[4], coefs_list[5])
 
-        self._x = Point(1.0, 0.0)
-        self._y = Point(0.0, 1.0)
-        self._o = Point(0.0, 0.0)
-        self._px = Point(1.0, 0.0)
-        self._py = Point(0.0, 1.0)
-        self._po = Point(0.0, 0.0)
+        post_list = whitespace_array('post')
+        self._px = Point(post_list[0], post_list[1])
+        self._py = Point(post_list[2], post_list[3])
+        self._po = Point(post_list[4], post_list[5])
 
         for name, value in xform_node.iteritems():
             if name in variations.variation_registry:
@@ -473,45 +480,7 @@ class Xform(object):
             if len(parts) == 2 and parts[0] in variations.variation_registry:
                 self.vars.set_variable(parts[0], parts[1], value)
 
-s="""
-      fprintf(f, "coefs=\"");
-      for (j = 0; j < 3; j++) {
-         if (j) fprintf(f, " ");
-         fprintf(f, "%g %g", x->c[j][0], x->c[j][1]);
-      }
-      fprintf(f, "\"");
-
-      if (!id_matrix(x->post)) {
-         fprintf(f, " post=\"");
-         for (j = 0; j < 3; j++) {
-            if (j) fprintf(f, " ");
-            fprintf(f, "%g %g", x->post[j][0], x->post[j][1]);
-         }
-         fprintf(f, "\"");
-      }
-
-   }
-
-   if (!final_flag && !motion_flag && !flam27_flag) {
-
-      /* Print out the chaos row for this xform */
-      int numcols = numstd;
-
-      while (numcols > 0 && chaos_row[numcols-1]==1.0)
-         numcols--;
-
-      if (numcols>0) {
-         fprintf(f, " chaos=\"");
-         for (j=0;j<numcols;j++)
-            fprintf(f, "%g ",chaos_row[j]);
-         fprintf(f, "\"");
-      }
-
-      if (x->opacity<1.0)
-         fprintf(f, " opacity=\"%g\"",x->opacity);
-   }
-}
-"""
+            #TODO: chaos
 
 
 #---end Xform

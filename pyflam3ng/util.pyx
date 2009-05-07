@@ -66,13 +66,13 @@ def pix_diff(np.ndarray[ndim=2, dtype=np.uint8_t] pal, int i0, int i1):
           cdef int diff = 0
           cdef int i
           for i in range(3):
-                    diff += (pal[i0+i] - pal[i1+i])**2
+                    diff += (pal[i0,i] - pal[i1,i])**2
           return diff
 
 def pix_swap(np.ndarray[ndim=2, dtype=np.uint8_t] pal, int i0, int i1):
           cdef int i
           cdef unsigned char tmp
           for i in range(3):
-                tmp = pal[i0+i]
-                pal[i0+i] = pal[i1+i]
-                pal[i1+i] = tmp
+                tmp = pal[i0,i]
+                pal[i0,i] = pal[i1,i]
+                pal[i1,i] = tmp

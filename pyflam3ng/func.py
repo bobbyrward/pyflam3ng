@@ -1,4 +1,5 @@
 from math import *
+import colorsys
 
 def polar(x, y):
     len = sqrt(x**2 + y**2)

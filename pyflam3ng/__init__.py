@@ -25,9 +25,10 @@ from collections import defaultdict
 
 from lxml import etree
 import numpy
+from func import *
 
-from . import flam3
-from . import util
+from pyflam3ng import flam3
+from pyflam3ng import util
 
 def load_flame(xml_source=None, fd=None, filename=None):
     """Load a set of genomes from an xml document
@@ -90,15 +91,70 @@ class Point(object):
     """A 2d point in cartesian space"""
 
     def __init__(self, x=0.0, y=0.0):
-        self.x = x
-        self.y = y
+        self._x = x
+        self._y = y
+        self._len, self._ang = polar(self._x, self._y)
 
     def __iter__(self):
-        yield self.x
-        yield self.y
+        yield self._x
+        yield self._y
 
     def __repr__(self):
         return '<Point x=%f y=%f>' % (self.x, self.y)
+
+    def _get_x(self):
+        return self._x
+
+    def _set_x(self, x):
+        self._x = x
+        self._len, self._ang = polar(self._x, self._y)
+
+    x = property(_get_x, _set_x)
+
+    def _get_y(self):
+        return self._y
+
+    def _set_y(self, val):
+        self._y = val
+        self._len, self._ang = polar(self._x, self._y)
+
+    y = property(_get_y, _set_y)
+
+    def _get_rect(self):
+        return self._x, self._y
+
+    def _set_rect(self, coord):
+        self._x, self._y = coord
+        self._len, self._ang = polar(self._x, self._y)
+
+    rect = property(_get_rect, _set_rect)
+
+    def _get_len(self):
+        return self._len
+
+    def _set_len(self, len):
+        self._len = len
+        self._x, self._y = rect(self._len, self._ang)
+
+    len = property(_get_len, _set_len)
+
+    def _get_ang(self):
+        return self._ang
+
+    def _set_ang(self, ang):
+        self._ang = ang
+        self._x, self._y = rect(self._len, self._ang)
+
+    ang = property(_get_ang, _set_ang)
+
+    def _get_polar(self):
+        return self._len, self._ang
+
+    def _set_polar(self, coord):
+        self._len, self._ang = coord
+        self._x, self._y = rect(self._len, self._ang)
+
+    polar = property(_get_polar, _set_polar)
 
 
 class Variations(object):
@@ -183,6 +239,98 @@ class Variations(object):
                 'height': 0.0,
                 'width': 0.0,
             },
+            'bent2': {
+                'x': 0.0,
+                'y': 0.0,
+            },
+            'bipolar': {
+                'shift': 0.0,
+            },
+            'cell': {
+                'size': 1.0,
+            },
+            'cpow': {
+                'r': 1.0,
+                'i': 0.0,
+                'power': 1.0,
+            },
+            'curve': {
+                'xamp': 1.0,
+                'yamp': 1.0,
+                'xlength': 1.0,
+                'ylength': 1.0,
+            },
+            'escher': {
+                'beta': 0.0,
+            },
+            'lazysusan': {
+                'spin': 0.0,
+                'space': 0.0,
+                'twist': 0.0,
+                'x': 1.0,
+                'y': 1.0,
+            },
+            'modulus': {
+                'x': 1.0,
+                'y': 1.0,
+            },
+            'oscope': {
+                'separation': 0.0,
+                'frequency': 1.0,
+                'amplitude': 1.0,
+                'damping': 0.0,
+            },
+            'popcorn2': {
+                'x': 0.0,
+                'y': 0.0,
+                'c': 0.0,
+            },
+            'separation': {
+                'x': 0.0,
+                'xinside': 0.0,
+                'y': 0.0,
+                'yinside': 0.0,
+            },
+            'split': {
+                'xsize': 0.0,
+                'ysize': 0.0,
+            },
+            'splits': {
+                'x': 1.0,
+                'y': 1.0,
+            },
+            'stripes': {
+                'space': 1.0,
+                'warp': 0.0,
+            },
+            'wedge': {
+                'angle': 0.0,
+                'hole': 0.0,
+                'count': 0.0,
+                'swirl': 0.0,
+            },
+            'wedge_julia': {
+                'angle': 0.0,
+                'count': 0.0,
+                'power': 2.0,
+                'dist': 1.0,
+            },
+            'wedge_sph': {
+                'angle': 0.0,
+                'count': 0.0,
+                'hole': 0.0,
+                'swirl': 0.0,
+            },
+            'whorl': {
+                'inside': 1.0,
+                'outside': 1.0,
+            },
+            'waves2': {
+                'freqx': 1.0,
+                'scalex': 1.0,
+                'freqy': 1.0,
+                'scaley': 1.0,
+            },
         }
 
     def __getitem__(self, key):
@@ -230,6 +378,207 @@ class Palette(object):
     def smooth(self, ntries=50, trysize=10000):
         self.array = util.palette_improve()
 
+
+class Xform(object):
+    def __init__(self):
+        self._weight = 0.0
+        self._color = 0.0
+        self._symmetry = 0.0
+        self._opacity = 1.0
+        self._x = Point(1.0, 0.0)
+        self._y = Point(0.0, 1.0)
+        self._o = Point(0.0, 0.0)
+        self._px = Point(1.0, 0.0)
+        self._py = Point(0.0, 1.0)
+        self._po = Point(0.0, 0.0)
+        #self.coefs = [(x,y for x,y in [self.x, self.y, self.o])] #?
+        #self.post = [(x,y for x,y in [self.px, self.py, self.po])]
+        self.vars = Variations()
+
+    def rotate_x(self, deg):
+        self._x.ang += deg
+
+    def rotate_y(self, deg):
+        self._y.ang += deg
+
+    def scale_x(self, scale):
+        self._x.len *= scale
+
+    def scale_y(self, scale):
+        self._y.len *= scale
+
+    def rotate(self, deg):
+        self.rotate_x(deg)
+        self.rotate_y(deg)
+
+    def pivot(self, deg):
+        self._o.ang += deg
+
+    def scale(self, scale):
+        self.scale_x(scale)
+        self.scale_y(scale)
+
+    #properties
+    def _get_weight(self):
+        return self._weight
+
+    def _set_weight(self, weight):
+        if weight < 0.0:
+            weight = 0.0
+        self._weight = weight
+
+    weight = property(_get_weight, _set_weight)
+
+    def _get_color(self):
+        return self._color
+
+    def _set_color(self, color):
+        if color < 0.0:   color = 0.0
+        elif color > 1.0: color = 1.0
+        self._color = color
+
+    color = property(_get_color, _set_color)
+
+    def _get_symmetry(self):
+        return self._symmetry
+
+    def _set_symmetry(self, symmetry):
+        if symmetry < -1.0:  symmetry = -1.0
+        elif symmetry > 1.0: symmetry = 1.0
+        self._symmetry = symmetry
+
+    symmetry = property(_get_symmetry, _set_symmetry)
+
+    def _get_opacity(self):
+        return self._opacity
+
+    def _set_opacity(self, opacity):
+        if opacity < 0.0:   opacity = 0.0
+        elif opacity > 1.0: opacity = 1.0
+        self._opacity = opacity
+
+    opacity = property(_get_opacity, _set_opacity)
+
+    def _get_x(self):
+        return self._x
+
+    def _set_x(self, x):
+        if not isinstance(x, Point):
+            if len(x) <> 2:
+                raise ValueError('Need x,y point for x')
+            else:
+                self._x = Point(x[0], x[1])
+        else:
+            self._x = x
+
+    x = property(_get_x, _set_x)
+
+    def _get_y(self):
+        return self._y
+
+    def _set_y(self, y):
+        if not isinstance(y, Point):
+            if len(y) <> 2:
+                raise ValueError('Need x,y point for y')
+            else:
+                self._y = Point(y[0], y[1])
+        else:
+            self._y = y
+
+    y = property(_get_y, _set_y)
+
+    def _get_o(self):
+        return self._o
+
+    def _set_o(self, o):
+        if not isinstance(o, Point):
+            if len(o) <> 2:
+                raise ValueError('Need x,y point for o')
+            else:
+                self._o = Point(o[0], o[1])
+        else:
+            self._o = o
+
+    o = property(_get_o, _set_o)
+
+    def _get_px(self):
+        return self._px
+
+    def _set_px(self, px):
+        if not isinstance(x, Point):
+            if len(px) <> 2:
+                raise ValueError('Need x,y point for px')
+            else:
+                self._px = Point(px[0], px[1])
+        else:
+            self._px = px
+
+    px = property(_get_px, _set_px)
+
+    def _get_py(self):
+        return self._py
+
+    def _set_py(self, py):
+        if not isinstance(y, Point):
+            if len(py) <> 2:
+                raise ValueError('Need x,y point for py')
+            else:
+                self._py = Point(py[0], py[1])
+        else:
+            self._py = py
+
+    py = property(_get_py, _set_py)
+
+    def _get_po(self):
+        return self._po
+
+    def _set_po(self, po):
+        if not isinstance(po, Point):
+            if len(po) <> 2:
+                raise ValueError('Need x,y point for po')
+            else:
+                self._po = Point(po[0], po[1])
+        else:
+            self._po = po
+
+    po = property(_get_po, _set_po)
+
+    def _get_coefs(self):
+        return [self._x.x, self._x.y, self._y.x, self._y.y, self._o.x, self._o.y]
+
+    def _set_coefs(self, coefs):
+        if type(coefs)==list or type(coefs)==tuple:
+            if len(coefs)==3 and isinstance(coefs[0],Point):
+                self._x = coefs[0]
+                self._y = coefs[1]
+                self._o = coefs[2]
+            elif len(coefs)==6:
+                self._x = Point(coefs[0], coefs[1])
+                self._y = Point(coefs[2], coefs[3])
+                self._o = Point(coefs[4], coefs[5])
+            else:
+                raise TypeError('need list of 3 Points or 6 vals')
+
+    coefs = property(_get_coefs, _set_coefs)
+
+    def _get_post(self):
+        return [self._px.x, self._px.y, self._py.x, self._py.y, self._po.x, self._po.y]
+
+    def _set_post(self, coefs):
+        if type(coefs)==list or type(coefs)==tuple:
+            if len(coefs)==3 and isinstance(coefs[0],Point):
+                self._px = coefs[0]
+                self._py = coefs[1]
+                self._po = coefs[2]
+            elif len(coefs)==6:
+                self._px = Point(coefs[0], coefs[1])
+                self._py = Point(coefs[2], coefs[3])
+                self._po = Point(coefs[4], coefs[5])
+            else:
+                raise TypeError('need list of 3 Points or 6 vals')
+
+    post = property(_get_post, _set_post)
+#---end Xform
 
 class Genome(object):
     def __init__(self, flame_node=None, genome_handle=None):

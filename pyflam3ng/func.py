@@ -8,5 +8,5 @@ def polar(x, y):
 def rect(len, ang):
     x = len * cos(ang*pi/180.0)
     y = len * sin(ang*pi/180.0)
-    return real, imag
+    return x, y
 

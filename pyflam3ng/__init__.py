@@ -26,8 +26,8 @@ from collections import defaultdict
 from lxml import etree
 import numpy
 
-from . import flam3
-from . import util
+from pyflam3ng import flam3
+from pyflam3ng import util
 
 def load_flame(xml_source=None, fd=None, filename=None):
     """Load a set of genomes from an xml document

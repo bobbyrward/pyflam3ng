@@ -24,7 +24,7 @@ import itertools
 from collections import defaultdict
 
 from lxml import etree
-import numpy
+import numpy, random
 from func import *
 from variations import variation_registry
 

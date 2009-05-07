@@ -99,6 +99,9 @@ class Point(object):
         yield self._x
         yield self._y
 
+    def __len__(self):
+        return 2
+
     def __repr__(self):
         return '<Point x=%f y=%f>' % (self.x, self.y)
 

@@ -242,6 +242,62 @@ class Palette(object):
     def smooth(self, ntries=50, trysize=10000):
         self.array = util.palette_improve()
 
+    def adjust_hue(self, val):
+        for i in xrange(256):
+            color = self.array[i]
+            color = rgb2hls(color[0], color[1], color[2])
+            self.array[i] = hls2rgb(color[0]+val, color[1], color[2])
+
+    def adjust_sat(self, val):
+        for i in xrange(256):
+            color = self.array[i]
+            color = rgb2hls(color[0], color[1], color[2])
+            self.array[i] = hls2rgb(color[0], color[1], color[2]+val)
+
+    def adjust_bright(self, val):
+        for i in xrange(256):
+            color = self.array[i]
+            color = rgb2hls(color[0], color[1], color[2])
+            self.array[i] = hls2rgb(color[0], color[1]+val, color[2])
+
+    def random(self, h_ranges=[(0,1)], l_ranges=[(0,1)], s_ranges=[(0,1)],
+               blocks=(32,64)):
+
+        if type(blocks) == int:
+            nblocks = blocks
+        elif type(blocks) == tuple and len(blocks) == 2:
+            nblocks = random.randint(blocks[0], blocks[1])
+        else:
+            raise TypeError('blocks must be int or 2-tuple range')
+
+        mbs = 256/blocks
+        mbr = 256%blocks
+        bsv = mbs/2
+        bs = []
+        for i in xrange(blocks):
+            v = random.randint(-bsv, bsv)
+            mbr -= v
+            bs.append(mbs+v)
+        if mbr > 0:
+            r = len(bs)/mbr
+            for i in xrange(mbr):
+                bs[(i*r)+random.randrange(r)] += 1
+        elif mbr < 0:
+            r = -len(bs)/mbr
+            for i in xrange(-mbr):
+                bs[(i*r)+random.randrange(r)] -= 1
+        index = 0
+        for b in bs:
+            h = random.random()
+            while not in_ranges(h, h_ranges): h = random.random()
+            l = random.random()
+            while not in_ranges(l, l_ranges): l = random.random()
+            s = random.random()
+            while not in_ranges(s, s_ranges): s = random.random()
+            for i in xrange(b):
+                self.array[index] = hls2rgb(h,l,s)
+                index += 1
+
 
 class Xform(object):
     def __init__(self, xml_node=None):

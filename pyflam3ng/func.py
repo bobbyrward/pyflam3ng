@@ -24,11 +24,11 @@ def clip(n, mini=None, maxi=None, rotates=False):
     return n
 
 def rgb2hls(r, g, b):
-    return colorsys.rgb2hls((r/256.0, g/256.0, b/256.0))
+    return colorsys.rgb_to_hls(r/256.0, g/256.0, b/256.0)
 
 def hls2rgb(h, l, s):
     h = clip(h, 0, 1, True)
     l = clip(l, 0, 0.999999)
     s = clip(s, 0, 0.999999)
-    return map(lambda x: int(x*256), colorsys.hls2rgb((h, l, s)))
+    return map(lambda x: int(x*256), colorsys.hls_to_rgb(h, l, s))
 

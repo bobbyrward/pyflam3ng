@@ -161,7 +161,7 @@ class Variations(object):
     """Wraps the variations in use by an XForm"""
 
     def __init__(self):
-        self.values = {}
+        self.values = defaultdict(lambda: 0.0)
         self.variables = {
             'blob': {
                 'low': 0.0,

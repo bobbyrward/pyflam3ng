@@ -26,9 +26,10 @@ from collections import defaultdict
 from lxml import etree
 import numpy
 from func import *
+from variations import variation_registry
 
-from pyflam3ng import flam3
-from pyflam3ng import util
+from . import flam3
+from . import util
 
 def load_flame(xml_source=None, fd=None, filename=None):
     """Load a set of genomes from an xml document
@@ -106,6 +107,7 @@ class Point(object):
         return '<Point x=%f y=%f>' % (self.x, self.y)
 
     def _get_x(self):
+        if self._x > -1E-06 and self._x < 1E-06: self._x = 0.0
         return self._x
 
     def _set_x(self, x):
@@ -115,10 +117,11 @@ class Point(object):
     x = property(_get_x, _set_x)
 
     def _get_y(self):
+        if self._y > -1E-06 and self._y < 1E-06: self._y = 0.0
         return self._y
 
-    def _set_y(self, val):
-        self._y = val
+    def _set_y(self, y):
+        self._y = y
         self._len, self._ang = polar(self._x, self._y)
 
     y = property(_get_y, _set_y)
@@ -164,177 +167,8 @@ class Variations(object):
     """Wraps the variations in use by an XForm"""
 
     def __init__(self):
-        self.values = defaultdict(lambda: 0.0)
-        self.variables = {
-            'blob': {
-                'low': 0.0,
-                'high': 1.0,
-                'waves': 1.0,
-            },
-            'pdj': {
-                'a': 0.0,
-                'b': 0.0,
-                'c': 0.0,
-                'd': 0.0,
-            },
-            'fan2': {
-                'x': 0.0,
-                'y': 1.0,
-            },
-            'rings2': {
-                'val': 0.0,
-            },
-            'perspective': {
-                'angle': 0.0,
-                'dist': 0.0,
-            },
-            'julian': {
-                'power': 1.0,
-                'dist': 1.0,
-            },
-            'juliascope': {
-                'power': 1.0,
-                'dist': 1.0,
-            },
-            'radialblur': {
-                'angle': 0.0,
-            },
-            'pie': {
-                'slices': 6.0,
-                'rotation': 0.0,
-                'thickness': 0.5,
-            },
-            'ngon': {
-                'sides': 5.0,
-                'power': 3.0,
-                'circle': 1.0,
-                'corners': 2.0,
-            },
-            'curl': {
-                'c1': 1.0,
-                'c2': 0.0,
-            },
-            'rectangles': {
-                'x': 1.0,
-                'y': 1.0,
-            },
-            'disc2': {
-                'rot': 0.0,
-                'twist': 0.0,
-            },
-            'supershape': {
-                'rnd': 0.0,
-                'm': 0.0,
-                'n1': 1.0,
-                'n2': 1.0,
-                'n3': 1.0,
-                'holes': 0.0,
-            },
-            'flower': {
-                'petals': 0.0,
-                'holes': 0.0,
-            },
-            'conic': {
-                'eccentricity': 1.0,
-                'holes': 0.0,
-            },
-            'parabola': {
-                'height': 0.0,
-                'width': 0.0,
-            },
-            'bent2': {
-                'x': 0.0,
-                'y': 0.0,
-            },
-            'bipolar': {
-                'shift': 0.0,
-            },
-            'cell': {
-                'size': 1.0,
-            },
-            'cpow': {
-                'r': 1.0,
-                'i': 0.0,
-                'power': 1.0,
-            },
-            'curve': {
-                'xamp': 1.0,
-                'yamp': 1.0,
-                'xlength': 1.0,
-                'ylength': 1.0,
-            },
-            'escher': {
-                'beta': 0.0,
-            },
-            'lazysusan': {
-                'spin': 0.0,
-                'space': 0.0,
-                'twist': 0.0,
-                'x': 1.0,
-                'y': 1.0,
-            },
-            'modulus': {
-                'x': 1.0,
-                'y': 1.0,
-            },
-            'oscope': {
-                'separation': 0.0,
-                'frequency': 1.0,
-                'amplitude': 1.0,
-                'damping': 0.0,
-            },
-            'popcorn2': {
-                'x': 0.0,
-                'y': 0.0,
-                'c': 0.0,
-            },
-            'separation': {
-                'x': 0.0,
-                'xinside': 0.0,
-                'y': 0.0,
-                'yinside': 0.0,
-            },
-            'split': {
-                'xsize': 0.0,
-                'ysize': 0.0,
-            },
-            'splits': {
-                'x': 1.0,
-                'y': 1.0,
-            },
-            'stripes': {
-                'space': 1.0,
-                'warp': 0.0,
-            },
-            'wedge': {
-                'angle': 0.0,
-                'hole': 0.0,
-                'count': 0.0,
-                'swirl': 0.0,
-            },
-            'wedge_julia': {
-                'angle': 0.0,
-                'count': 0.0,
-                'power': 2.0,
-                'dist': 1.0,
-            },
-            'wedge_sph': {
-                'angle': 0.0,
-                'count': 0.0,
-                'hole': 0.0,
-                'swirl': 0.0,
-            },
-            'whorl': {
-                'inside': 1.0,
-                'outside': 1.0,
-            },
-            'waves2': {
-                'freqx': 1.0,
-                'scalex': 1.0,
-                'freqy': 1.0,
-                'scaley': 1.0,
-            },
-        }
+        self._values = {}
+        self._variables = {}
 
     def __getitem__(self, key):
         return self.values[key]
@@ -346,14 +180,14 @@ class Variations(object):
         del self.values[key]
 
     def variation_vars(self, variation_name=None):
-        if variation_name in self.variables:
-            return self.variables[variation_name]
+        if variation_name in self._variables:
+            return self._variables[variation_name]
         else:
-            return dict()
+            return None
 
     def set_variable(self, variation_name, variable_name, value):
-        if variation_name in self.variables:
-            vars = self.variables[variation_name]
+        if variation_name in self._variables:
+            vars = self._variables[variation_name]
 
             if variable_name in vars:
                 vars[variable_name] = value
@@ -363,8 +197,8 @@ class Variations(object):
             raise KeyError('Unknown variation')
 
     def get_variable(self, variation_name, variable_name, value):
-        if variation_name in self.variables:
-            vars = self.variables[variation_name]
+        if variation_name in self._variables:
+            vars = self._variables[variation_name]
 
             if variable_name in vars:
                 return vars[variable_name]
@@ -372,6 +206,33 @@ class Variations(object):
                 raise KeyError('Unknown variable')
         else:
             raise KeyError('Unknown variation')
+
+    def set_variation(self, variation_name, value=1.0):
+        if variation_name not in variation_registry.keys():
+            return KeyError('Unknown variation')
+        if variation_name in self._values:
+            if value == 0.0:
+                self._values.pop(variation_name)
+            else:
+                self._values[variation_name] = value
+        else:
+            self._values.setdefault(variation_name, value)
+        if variation_registry[variation_name]:
+            if value == 0.0:
+                self._variables.pop(variation_name)
+            else:
+                self._variables.setdefault(variation_name,
+                        variation_registry[variation_name])
+
+    def _get_values(self):
+        return self._values
+
+    values = property(_get_values)
+
+    def _get_variables(self):
+        return self._variables
+
+    variables = property(_get_variables)
 
 
 class Palette(object):
@@ -430,9 +291,7 @@ class Xform(object):
         return self._weight
 
     def _set_weight(self, weight):
-        if weight < 0.0:
-            weight = 0.0
-        self._weight = weight
+        self._weight = clip(weight, mini=0.0)
 
     weight = property(_get_weight, _set_weight)
 
@@ -440,9 +299,7 @@ class Xform(object):
         return self._color
 
     def _set_color(self, color):
-        if color < 0.0:   color = 0.0
-        elif color > 1.0: color = 1.0
-        self._color = color
+        self._color = clip(color, mini=0.0, maxi=1.0)
 
     color = property(_get_color, _set_color)
 
@@ -450,9 +307,7 @@ class Xform(object):
         return self._symmetry
 
     def _set_symmetry(self, symmetry):
-        if symmetry < -1.0:  symmetry = -1.0
-        elif symmetry > 1.0: symmetry = 1.0
-        self._symmetry = symmetry
+        self._symmetry = clip(symmetry, mini=-1.0, maxi=1.0)
 
     symmetry = property(_get_symmetry, _set_symmetry)
 
@@ -460,9 +315,7 @@ class Xform(object):
         return self._opacity
 
     def _set_opacity(self, opacity):
-        if opacity < 0.0:   opacity = 0.0
-        elif opacity > 1.0: opacity = 1.0
-        self._opacity = opacity
+        self._opacity = clip(opacity, mini=0.0, maxi=1.0)
 
     opacity = property(_get_opacity, _set_opacity)
 

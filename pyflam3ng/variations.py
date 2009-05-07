@@ -3,23 +3,7 @@
 variation_registry = {}
 
 def define_variation(class_name, xml_name, variables=None):
-    class Var(object):
-        def __init__(self, value=1.0, **kwargs):
-            self.value = value
-
-            if variables is not None:
-                for var_name, default in variables.iteritems():
-                    setattr(self, var_name, kwargs.get(var_name, default))
-
-        def name(self):
-            return xml_name
-
-    c = Var
-    c.__name__ = class_name
-
-    variation_registry[xml_name] = c
-
-    return c
+    variation_registry.setdefault(xml_name, variables)
 
 Linear = define_variation('Linear', 'linear')
 Sinusoidal = define_variation('Sinusoidal', 'sinusoidal')

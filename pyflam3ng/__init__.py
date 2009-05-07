@@ -270,11 +270,11 @@ class Palette(object):
         else:
             raise TypeError('blocks must be int or 2-tuple range')
 
-        mbs = 256/blocks
-        mbr = 256%blocks
+        mbs = 256/nblocks
+        mbr = 256%nblocks
         bsv = mbs/2
         bs = []
-        for i in xrange(blocks):
+        for i in xrange(nblocks):
             v = random.randint(-bsv, bsv)
             mbr -= v
             bs.append(mbs+v)

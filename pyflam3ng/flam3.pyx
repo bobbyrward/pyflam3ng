@@ -22,6 +22,8 @@
 ##############################################################################
 
 cimport flam3
+cimport numpy as np
+cimport stdlib
 
 flam3_nvariations = c_flam3_nvariations
 flam3_parent_fn_len = c_flam3_parent_fn_len
@@ -155,6 +157,49 @@ def random_seed():
     flam3_srandom()
 
 
+cdef class RenderBuffer:
+    cdef unsigned char* _buffer
+    cdef int _bytes_per_pixel
+    cdef unsigned int _width
+    cdef unsigned int _height
+
+    def __cinit__(RenderBuffer self):
+        self._buffer = NULL
+
+    cpdef resize(RenderBuffer self, unsigned int width, unsigned int height, int channels):
+        self._bytes_per_pixel = channels
+        self._width = width
+        self._height = height
+
+        self._buffer = <unsigned char*>stdlib.realloc(self._buffer, width * height * self._bytes_per_pixel)
+
+    property width:
+        def __get__(RenderBuffer self):
+            return self._width
+
+    property height:
+        def __get__(RenderBuffer self):
+            return self._height
+
+    property channels:
+        def __get__(RenderBuffer self):
+            return self._bytes_per_pixel
+
+    property size_in_bytes:
+        def __get__(RenderBuffer self):
+            return self._width * self._height * self._bytes_per_pixel
+
+    def __dealloc__(RenderBuffer self):
+        if self._buffer != NULL:
+            stdlib.free(self._buffer)
+            self._buffer = NULL
+
+
+cdef int __render_callback(void *context, double progress, int stage, double eta) with gil:
+    if context != NULL and (<object>context) is not None:
+        return <int>(<object>context)(progress, stage, eta)
+
+
 cdef class GenomeHandle:
     cdef flam3_genome* _genome
 
@@ -171,6 +216,51 @@ cdef class GenomeHandle:
         cdef GenomeHandle other = GenomeHandle()
         flam3_copy(other._genome, self._genome)
         return other
+
+    def render(self, RenderBuffer buffer, **kwargs):
+        cdef flam3_frame frame
+        cdef stat_struct stats
+        cdef dict py_stats = dict()
+        cdef int transparent = <int>kwargs.get('transparent', 0)
+        cdef void *data = buffer._buffer
+        cdef unsigned int width = buffer._width
+        cdef unsigned int channels = buffer._bytes_per_pixel
+        cdef object progress_callback = kwargs.get('progress', None)
+        cdef int c_flam3_field_both = flam3_field_both
+
+        flam3_init_frame(&frame)
+
+        frame.genomes = self._genome
+        frame.ngenomes = 1
+        frame.verbose = 0
+        frame.earlyclip = 0
+
+        frame.pixel_aspect_ratio = <double>kwargs.get('pixel_aspect_ratio', 1.0)
+        frame.bits = <int>kwargs.get('bits', 33)
+        frame.bytes_per_channel = 1
+        frame.time = <double>kwargs.get('time', 0.0)
+
+        frame.nthreads = <int>kwargs.get('nthreads', 0)
+
+        if frame.nthreads == 0:
+            frame.nthreads = flam3_count_nthreads()
+
+        if progress_callback is not None:
+            frame.progress = __render_callback
+            frame.progress_parameter = <void*>progress_callback
+        else:
+            frame.progress = NULL
+            frame.progress_parameter = NULL
+
+        with nogil:
+            flam3_render(&frame, data, width, c_flam3_field_both, channels, transparent, &stats)
+
+        py_stats['badvals'] = stats.badvals
+        py_stats['num_iters'] = stats.num_iters
+        py_stats['render_seconds'] = stats.render_seconds
+
+        return py_stats
+
 
 
 def get_variation_list():

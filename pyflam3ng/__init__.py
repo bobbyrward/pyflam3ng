@@ -531,12 +531,13 @@ class Xform(object):
         self._y = Point(coefs_list[2], coefs_list[3])
         self._o = Point(coefs_list[4], coefs_list[5])
 
-        post_list = whitespace_array('post')
-        self._px = Point(post_list[0], post_list[1])
-        self._py = Point(post_list[2], post_list[3])
-        self._po = Point(post_list[4], post_list[5])
+        if 'post' in xform_node.attrib:
+            post_list = whitespace_array('post')
+            self._px = Point(post_list[0], post_list[1])
+            self._py = Point(post_list[2], post_list[3])
+            self._po = Point(post_list[4], post_list[5])
 
-        for name, value in xform_node.iteritems():
+        for name, value in xform_node.attrib.iteritems():
             if name in variations.variation_registry:
                 self.vars.set_variation(name, float(value))
                 continue
@@ -745,6 +746,6 @@ class Genome(object):
 
         self.xforms = []
         for xform_node in self.flame_node.xpath('//xform'):
-            self.xforms.append(XForm(xml_node=xform_node))
+            self.xforms.append(Xform(xml_node=xform_node))
 
 

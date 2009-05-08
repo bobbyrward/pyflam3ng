@@ -246,60 +246,60 @@ cdef extern from "flam3.h":
 
 #typedef void (*flam3_iterator)(void *, double)
 
-    int flam3_get_palette(int palette_index, flam3_palette p, double hue_rotation)
-    void flam3_add_xforms(flam3_genome *cp, int num_to_add, int interp_padding, int final_flag)
-    void flam3_delete_xform(flam3_genome *thiscp, int idx_to_delete)
-    void flam3_copy(flam3_genome *dest, flam3_genome *src)
-    void flam3_copyx(flam3_genome *dest, flam3_genome *src, int num_std, int num_final)
-    void flam3_copy_params(flam3_xform *dest, flam3_xform *src, int varn)
-    void flam3_create_xform_distrib(flam3_genome *cp, unsigned short *xform_distrib)
+    int flam3_get_palette(int palette_index, flam3_palette p, double hue_rotation) nogil
+    void flam3_add_xforms(flam3_genome *cp, int num_to_add, int interp_padding, int final_flag) nogil
+    void flam3_delete_xform(flam3_genome *thiscp, int idx_to_delete) nogil
+    void flam3_copy(flam3_genome *dest, flam3_genome *src) nogil
+    void flam3_copyx(flam3_genome *dest, flam3_genome *src, int num_std, int num_final) nogil
+    void flam3_copy_params(flam3_xform *dest, flam3_xform *src, int varn) nogil
+    void flam3_create_xform_distrib(flam3_genome *cp, unsigned short *xform_distrib) nogil
     int flam3_iterate(flam3_genome *g, int nsamples, int fuse, double *samples,
-                         unsigned short *xform_distrib, randctx *rc)
-    void flam3_interpolate(flam3_genome *genomes, int ngenomes, double time, flam3_genome *result)
-    void flam3_interpolate_n(flam3_genome *result, int ncp, flam3_genome *cpi, double *c)
-    void flam3_print(void *f, flam3_genome *g, char *extra_attributes, int print_edits)
-    char *flam3_print_to_string(flam3_genome *cp)
-    void flam3_random(flam3_genome *g, int *ivars, int ivars_n, int sym, int spec_xforms)
-    flam3_genome *flam3_parse(char *s, int *ncps)
-    flam3_genome *flam3_parse_xml2(char *s, char *fn, int default_flag, int *ncps)
-    flam3_genome *flam3_parse_from_file(void *f, char *fn, int default_flag, int *ncps)
+                         unsigned short *xform_distrib, randctx *rc) nogil
+    void flam3_interpolate(flam3_genome *genomes, int ngenomes, double time, flam3_genome *result) nogil
+    void flam3_interpolate_n(flam3_genome *result, int ncp, flam3_genome *cpi, double *c) nogil
+    void flam3_print(void *f, flam3_genome *g, char *extra_attributes, int print_edits) nogil
+    char *flam3_print_to_string(flam3_genome *cp) nogil
+    void flam3_random(flam3_genome *g, int *ivars, int ivars_n, int sym, int spec_xforms) nogil
+    flam3_genome *flam3_parse(char *s, int *ncps) nogil
+    flam3_genome *flam3_parse_xml2(char *s, char *fn, int default_flag, int *ncps) nogil
+    flam3_genome *flam3_parse_from_file(void *f, char *fn, int default_flag, int *ncps) nogil
 
-    void flam3_add_symmetry(flam3_genome *g, int sym)
-    void flam3_parse_hexformat_colors(char *colstr, flam3_genome *cp, int numcolors, int chan)
+    void flam3_add_symmetry(flam3_genome *g, int sym) nogil
+    void flam3_parse_hexformat_colors(char *colstr, flam3_genome *cp, int numcolors, int chan) nogil
 
     void flam3_estimate_bounding_box(flam3_genome *g, double eps, int nsamples,
-                 double *bmin, double *bmax, randctx *rc)
-    void flam3_rotate(flam3_genome *g, double angle, int interp_type)
-    void flam3_align(flam3_genome *dst, flam3_genome *src, int nsrc)
-    void establish_asymmetric_refangles(flam3_genome *cp, int ncps)
+                 double *bmin, double *bmax, randctx *rc) nogil
+    void flam3_rotate(flam3_genome *g, double angle, int interp_type) nogil
+    void flam3_align(flam3_genome *dst, flam3_genome *src, int nsrc) nogil
+    void establish_asymmetric_refangles(flam3_genome *cp, int ncps) nogil
 
-    double flam3_dimension(flam3_genome *g, int ntries, int clip_to_camera)
-    double flam3_lyapunov(flam3_genome *g, int ntries)
+    double flam3_dimension(flam3_genome *g, int ntries, int clip_to_camera) nogil
+    double flam3_lyapunov(flam3_genome *g, int ntries) nogil
 
-    void flam3_apply_template(flam3_genome *cp, flam3_genome *templ)
+    void flam3_apply_template(flam3_genome *cp, flam3_genome *templ) nogil
 
-    int flam3_count_nthreads()
+    int flam3_count_nthreads() nogil
     void flam3_render(flam3_frame *f, void *out, int out_width, int field, int nchan, int transp, stat_struct *stats) nogil
 
-    double flam3_render_memory_required(flam3_frame *f)
+    double flam3_render_memory_required(flam3_frame *f) nogil
 
 
-    double flam3_random01()
-    double flam3_random11()
-    int flam3_random_bit()
+    double flam3_random01() nogil
+    double flam3_random11() nogil
+    int flam3_random_bit() nogil
 
-    double flam3_random_isaac_01(randctx *)
-    double flam3_random_isaac_11(randctx *)
-    int flam3_random_isaac_bit(randctx *)
+    double flam3_random_isaac_01(randctx *) nogil
+    double flam3_random_isaac_11(randctx *) nogil
+    int flam3_random_isaac_bit(randctx *) nogil
 
-    void flam3_init_frame(flam3_frame *f)
+    void flam3_init_frame(flam3_frame *f) nogil
 
-    size_t flam3_size_flattened_genome(flam3_genome *cp)
-    void flam3_flatten_genome(flam3_genome *cp, void *buf)
-    void flam3_unflatten_genome(void *buf, flam3_genome *cp)
+    size_t flam3_size_flattened_genome(flam3_genome *cp) nogil
+    void flam3_flatten_genome(flam3_genome *cp, void *buf) nogil
+    void flam3_unflatten_genome(void *buf, flam3_genome *cp) nogil
 
-    void flam3_srandom()
+    void flam3_srandom() nogil
 
-    void flam3_colorhist(flam3_genome *cp, int num_batches, double *hist)
+    void flam3_colorhist(flam3_genome *cp, int num_batches, double *hist) nogil
 
 

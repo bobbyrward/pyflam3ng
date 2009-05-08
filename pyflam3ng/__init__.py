@@ -628,6 +628,10 @@ class Genome(object):
         self.genome_handle = genome_handle
         self._refresh_self_from_handle()
 
+    def random(self, variations, symmetry=False, num_xforms=2):
+        self.genome_handle.random(variations, symmetry, num_xforms)
+        self._refresh_self_from_handle()
+
     def _refresh_handle_from_self(self):
         self.genome_handle = flam3.from_xml(etree.tostring(self.flame_node))[0]
 

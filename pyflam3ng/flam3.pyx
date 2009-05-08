@@ -207,6 +207,21 @@ cdef class GenomeHandle:
     def __cinit__(self):
         self._genome = <flam3_genome*>_malloc(sizeof(flam3_genome));
 
+    def random(GenomeHandle self, list variations, bint symmetry, int num_xforms):
+        cdef list variation_list = get_variation_list()
+        cdef int num_variations = len(variations)
+        cdef int *vars = <int*>stdlib.malloc(sizeof(int) * num_variations)
+
+        for var_name in enumerate(variations):
+            try:
+                var_idx = variation_list.index(variations)
+            except ValueError:
+                raise KeyError('unknown variation: "%s"' % var_name)
+
+        flam3_random(self._genome, vars, num_variations, symmetry, num_xforms)
+
+        stdlib.free(vars)
+
     cdef void copy_genome(self, flam3_genome* genome):
         memmove(self._genome, genome, sizeof(flam3_genome))
 

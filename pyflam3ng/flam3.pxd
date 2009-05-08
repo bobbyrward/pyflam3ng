@@ -228,7 +228,6 @@ cdef extern from "flam3.h":
         double temporal_filter_width, temporal_filter_exp
 
     ctypedef struct flam3_frame:
-        pass
         double         pixel_aspect_ratio
         flam3_genome  *genomes
         int            ngenomes
@@ -240,6 +239,7 @@ cdef extern from "flam3.h":
         void          *progress_parameter
         randctx       rc
         int           nthreads
+        int            earlyclip
 
     void *flam3_malloc(size_t size)
     void flam3_free(void *ptr)
@@ -279,7 +279,7 @@ cdef extern from "flam3.h":
     void flam3_apply_template(flam3_genome *cp, flam3_genome *templ)
 
     int flam3_count_nthreads()
-    void flam3_render(flam3_frame *f, void *out, int out_width, int field, int nchan, int transp, stat_struct *stats)
+    void flam3_render(flam3_frame *f, void *out, int out_width, int field, int nchan, int transp, stat_struct *stats) nogil
 
     double flam3_render_memory_required(flam3_frame *f)
 

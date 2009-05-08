@@ -167,11 +167,12 @@ cdef class RenderBuffer:
         self._buffer = NULL
 
     cpdef resize(RenderBuffer self, unsigned int width, unsigned int height, int channels):
-        self._bytes_per_pixel = channels
-        self._width = width
-        self._height = height
+        if self._width != width and self._height != height and self._bytes_per_pixel != channels:
+            self._bytes_per_pixel = channels
+            self._width = width
+            self._height = height
 
-        self._buffer = <unsigned char*>stdlib.realloc(self._buffer, width * height * self._bytes_per_pixel)
+            self._buffer = <unsigned char*>stdlib.realloc(self._buffer, width * height * self._bytes_per_pixel)
 
     property width:
         def __get__(RenderBuffer self):
@@ -230,6 +231,9 @@ cdef class GenomeHandle:
 
         flam3_init_frame(&frame)
 
+        self._genome.width = buffer.width
+        self._genome.height = buffer.height
+
         frame.genomes = self._genome
         frame.ngenomes = 1
         frame.verbose = 0
@@ -239,11 +243,11 @@ cdef class GenomeHandle:
         frame.bits = <int>kwargs.get('bits', 33)
         frame.bytes_per_channel = 1
         frame.time = <double>kwargs.get('time', 0.0)
+        self._genome.ntemporal_samples = 1
+        self._genome.nbatches = 1
 
         frame.nthreads = <int>kwargs.get('nthreads', 0)
-
-        if frame.nthreads == 0:
-            frame.nthreads = flam3_count_nthreads()
+        frame.nthreads = 1
 
         if progress_callback is not None:
             frame.progress = __render_callback
@@ -253,6 +257,9 @@ cdef class GenomeHandle:
             frame.progress_parameter = NULL
 
         with nogil:
+            if frame.nthreads == 0:
+                frame.nthreads = flam3_count_nthreads()
+
             flam3_render(&frame, data, width, c_flam3_field_both, channels, transparent, &stats)
 
         py_stats['badvals'] = stats.badvals

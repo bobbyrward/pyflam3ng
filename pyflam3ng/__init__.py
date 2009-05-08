@@ -24,7 +24,7 @@ import itertools
 from collections import defaultdict
 
 from lxml import etree
-import numpy, random
+import numpy, random, Image
 from func import *
 from variations import variation_registry
 
@@ -240,7 +240,7 @@ class Palette(object):
         self.array = numpy.zeros((256,3), numpy.uint8)
 
     def smooth(self, ntries=50, trysize=10000):
-        self.array = util.palette_improve()
+        self.array = util.palette_improve(self.array, ntries, trysize)
 
     def adjust_hue(self, val):
         for i in xrange(256):
@@ -297,6 +297,16 @@ class Palette(object):
             for i in xrange(b):
                 self.array[index] = hls2rgb(h,l,s)
                 index += 1
+
+    def from_file(self, filename):
+        img = Image.open(filename)
+        bin = map(ord, img.tostring())
+        for i in xrange(256):
+            x = random.randint(0, img.size[0]-1)
+            y = random.randint(0, img.size[1]-1)
+            idx = 3*(x + img.size[0]*y)
+            self.array[i] = bin[idx:idx+3]
+        self.smooth()
 
 
 class Xform(object):

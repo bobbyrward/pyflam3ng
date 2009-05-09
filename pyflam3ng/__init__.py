@@ -238,6 +238,67 @@ class Point(object):
 
         return False
 
+    def in_circle(self, center, radius):
+        # find the difference between the two points
+        u = p - c
+
+        # find the magnitude squared of the difference
+        mm  = u.magnitude_squared()
+
+        # if the magnitude is less than the radius it is inside the circle
+        return (r*r - mm) >= 0.0
+
+    def in_triangle(self, v0, v1, v2):
+        e0 = p - v0
+        e1 = v1 - v0
+        e2 = v2 - v0
+
+        if float_equality(e1.x, 0.):
+            if float_equality(e2.x, 0.):
+                return False
+
+            u = e0.x / e2.x
+
+            if u < 0 or u > 1:
+                return False
+
+            if float_equality(e1.y, 0.):
+                return False
+
+            v = (e0.y - e2.y * u) / e1.y
+
+            if v < 0:
+                return False
+        else:
+            d = e2.y * e1.x - e2.x * e1.y
+
+            if float_equality(d, 0.):
+                return False
+
+            u = (e0.y * e1.x - e0.x * e1.y) / d
+
+            if u < 0 or u > 1:
+                return False
+
+            v = (e0.x - e2.x * u) / e1.x
+
+            if v < 0:
+                return False
+
+        return u + v <= 1.0
+
+    def in_rect(self, left, top, right, bottom):
+        if self.x < left or self.x > right:
+            return False
+
+        if self.x < top or self.x > bottom:
+            return False
+
+        return True
+
+    def in_rect_wh(self, left, top, width, height):
+        return self.in_rect(left, top, left + width, top + height)
+
 
 class Transform(object):
     def __init__(self):

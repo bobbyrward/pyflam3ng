@@ -42,11 +42,3 @@ def hls2rgb(h, l, s):
     s = clip(s, 0, 0.999999)
     return map(lambda x: int(x*256), colorsys.hls_to_rgb(h, l, s))
 
-def in_ranges(n, ranges):
-    if type(ranges)==list:
-        for r in ranges:
-            if n >= r[0] and n <= r[1]: return True
-        else:
-            if n >= ranges[0] and n <= ranges[1]: return True
-    return False
-

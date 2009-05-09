@@ -428,12 +428,12 @@ class Palette(object):
                 bs[(i*r)+random.randrange(r)] -= 1
         index = 0
         for b in bs:
-            h = random.random()
-            while not in_ranges(h, h_ranges): h = random.random()
-            l = random.random()
-            while not in_ranges(l, l_ranges): l = random.random()
-            s = random.random()
-            while not in_ranges(s, s_ranges): s = random.random()
+            hr = h_ranges[random.randint(0, len(h_ranges)-1)]
+            h = random.uniform(hr[0], hr[1])
+            lr = l_ranges[random.randint(0, len(l_ranges)-1)]
+            l = random.uniform(lr[0], lr[1])
+            sr = s_ranges[random.randint(0, len(s_ranges)-1)]
+            s = random.uniform(sr[0], sr[1])
             for i in xrange(b):
                 self.array[index] = hls2rgb(h,l,s)
                 index += 1

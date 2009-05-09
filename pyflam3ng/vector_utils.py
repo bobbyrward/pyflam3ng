@@ -166,7 +166,7 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', a=1, b=0.5, c=1):
     #Segments is the number of interps to do, 1 less than #cps when not looping
     if loop: seg = len(my_cps)
     else:    seg = len(my_cps)-1
-    
+
     cps = my_cps[:]
 
     #examples with [0, 1, 2, 3] - remember n-1, n, n+1, n+2 for spline
@@ -216,11 +216,11 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', a=1, b=0.5, c=1):
             for i in xrange(len(ttmp[0])):
                 row = []
                 for j in xrange(count):
-                    row.append(tmp[j][i])
+                    row.append(ttmp[j][i])
                 reord.append(row)
             tmp.extend(reord)
             #end improve section
-    #---end segments    
+    #---end segments
     return tmp
 #---end get_spline
 

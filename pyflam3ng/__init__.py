@@ -34,6 +34,7 @@ from func import *
 from .variations import variation_registry
 from . import flam3
 from . import util
+from . import vector_utils as vu
 
 
 EPSILON = 0.0000000000001
@@ -438,18 +439,33 @@ class Palette(object):
                 self.array[index] = hls2rgb(h,l,s)
                 index += 1
 
-    def from_seed(self, seed, c_split=0, split=90, dist=64, space='rgb'):
+    def from_seed(self, seed, c_split=0, split=90, dist=64, space='rgb', curve='cos'):
         c_split /= 360.0
         split /= 360.0
-        h,l,s = rgb2hls(seed)
-        comp = hls2rgb(h+csplit+0.5,l,s)
-        lspl = hls2rgb(h-split,l,s)
-        rspl = hls2rgb(h+split,l,s)
+        if space=='rgb':
+            h,l,s = rgb2hls(*seed)
+            comp = hls2rgb(h+c_split+0.5,l,s)
+            lspl = hls2rgb(h-split,l,s)
+            rspl = hls2rgb(h+split,l,s)
+        elif space=='hls':
+            seed = rgb2hls(*seed)
+            comp = [clip(h+c_split+0.5,0,1,True),l,s]
+            lspl = [clip(h-split,0,1,True),l,s]
+            rspl = [clip(h+split,0,1,True),l,s]
+        else:
+            raise ValueError('Invalid color space')
 
-        self.array[:dist] = get_spline(CP(comp), CP(lspl), dist, curve='cos')
-        self.array[dist:128] = get_spline(CP(lspl), CP(seed), 128-dist, curve='cos')
-        self.array[127:255-dist] = get_spline(CP(seed), CP(rspl), 128-dist, curve='cos')
-        self.array[255-dist:] = get_spline(CP(rspl), CP(comp), dist, curve='cos')
+        tmp = numpy.zeros((256,3))
+        tmp[:dist] = numpy.array(vu.get_spline([vu.CP(comp), vu.CP(lspl)], dist, curve=curve))
+        tmp[dist:128] = numpy.array(vu.get_spline([vu.CP(lspl), vu.CP(seed)], 128-dist, curve=curve))
+        tmp[128:256-dist] = numpy.array(vu.get_spline([vu.CP(seed), vu.CP(rspl)], 128-dist, curve=curve))
+        tmp[256-dist:] = numpy.array(vu.get_spline([vu.CP(rspl), vu.CP(comp)], dist, curve=curve))
+
+        if space=='hls':
+            for i in xrange(256):
+                tmp[i] = hls2rgb(*tmp[i])
+
+        self.array[:] = tmp[:]
 
 
     def from_file(self, filename):

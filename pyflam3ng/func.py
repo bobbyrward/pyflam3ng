@@ -37,7 +37,7 @@ def rgb2hls(r, g, b):
 
 def hls2rgb(h, l, s):
     h = clip(h, 0, 1, True)
-    l = clip(l, 0, 0.999999)
-    s = clip(s, 0, 0.999999)
+    l = clip(l, 0, 1)
+    s = clip(s, 0, 1)
     return map(lambda x: int(x*256), colorsys.hls_to_rgb(h, l, s))
 

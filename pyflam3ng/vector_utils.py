@@ -6,8 +6,7 @@ periodic vectors that start and end at the same point, and smoothed TCB splines
 for animation and interpolation.
 """
 
-from math import *
-import numpy
+import numpy, math
 
 
 def crange(x, y, n, curve='lin', a=1.0, b=0.5, c=1.0):
@@ -42,7 +41,7 @@ def crange(x, y, n, curve='lin', a=1.0, b=0.5, c=1.0):
         if   curve=='exp':
             d = y-x
             for i in xrange(n):
-                tmp[i] = d*(1-exp(-a*(i/m)))/(1-exp(-a))
+                tmp[i] = d*(1-math.exp(-a*(i/m)))/(1-math.exp(-a))
         elif curve=='par':
             d = (y-x)/(m**2)
             for i in xrange(n):
@@ -54,17 +53,17 @@ def crange(x, y, n, curve='lin', a=1.0, b=0.5, c=1.0):
         elif curve=='cos':
             d = y-x
             for i in xrange(n):
-                tmp[i] = (x+d*((cos(pi + (i/m)*pi))+1)/2)**a
+                tmp[i] = (x+d*((math.cos(math.pi + (i/m)*math.pi))+1)/2)**a
         elif curve=='sinh':
             d = y-x
             tmp[0] = x
             for i in xrange(1,n):
-                tmp[i] = x+((sinh(a*(2*i-m)/m) - sinh(-a)) / (2*sinh(a*(2*n-m)/m)/d))
+                tmp[i] = x+((math.sinh(a*(2*i-m)/m)-math.sinh(-a))/(2*math.sinh(a*(2*n-m)/m)/d))
         elif curve=='tanh':
             d = y-x
             tmp[0] = x
             for i in xrange(1,n):
-                tmp[i] = x+((tanh(a*(2*i-m)/m) - tanh(-a)) / (2*tanh(a*(2*n-m)/m)/d))
+                tmp[i] = x+((math.tanh(a*(2*i-m)/m)-math.tanh(-a))/(2*math.tanh(a*(2*n-m)/m)/d))
         else:
             d = (y-x)/m
             for i in xrange(n):
@@ -97,12 +96,12 @@ def crange(x, y, n, curve='lin', a=1.0, b=0.5, c=1.0):
         elif curve=='psin':
             tmp = crange(x,y,n,curve='lin')
             for i in xrange(n):
-                tmp[i] += (a*sin((i/m)*pi*2*c))#**b
+                tmp[i] += a*math.sin((i/m)*math.pi*2*c)#**b
         else:
             d = y-x
             tmp = crange(x,y,n,'lin')
             for i in xrange(n):
-                tmp[i] += (a*((cos(pi + (i/m)*pi*2*c))+1)/2)#**b
+                tmp[i] += (a*((math.cos(math.pi + (i/m)*math.pi*2*c))+1)/2)**b
     return tmp
 #---end crange
 
@@ -125,7 +124,7 @@ class CP(object):
     def _get_spline(self):
         return self.t, self.c, self.b
 
-    spline = property(_get_spline)
+    spline = property(_get_spline, doc="Spline parameters in a list")
 #---end CP
 
 def get_pad(target, neighbor, n):
@@ -164,11 +163,15 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', a=1, b=0.5, c=1):
     if len(my_cps)<2:
         raise ValueError('Need 2 or more CPs')
 
+    #Segments is the number of interps to do, 1 less than #cps when not looping
     if loop: seg = len(my_cps)
     else:    seg = len(my_cps)-1
     
     cps = my_cps[:]
 
+    #examples with [0, 1, 2, 3] - remember n-1, n, n+1, n+2 for spline
+    #  looping - (3,) 0, 1, 2, 3, (0, 1) (not interped, just used for spline)
+    #  not - (3,) 0, 1, 2, 3, (0) (not interped)
     if loop:
         cps.append(my_cps[0])
         cps.append(my_cps[1])
@@ -177,6 +180,7 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', a=1, b=0.5, c=1):
         cps.append(get_pad(my_cps[-2], my_cps[-1], -n))
         cps.insert(0, get_pad(my_cps[0], my_cps[1], n))
 
+    #move vals into list (change columns to rows)
     vals = []
     if type(cps[0].val)==int or type(cps[0].val)==float:
         #1D data
@@ -193,15 +197,16 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', a=1, b=0.5, c=1):
         count = len(cps[0].val)
 
     tmp = []
+    #do segments
     for i in xrange(seg):
         tcps = cps[i:i+4]
-        for c in tcps: print c.val, 
-        print
 
         if count==1:
+            #1D
             tmp.extend(spline([cp.val for cp in tcps], n, tcps[1].spline,
                        tcps[2].spline, curve=curve, a=a, b=b, c=c))
         else:
+            #ND
             #This code is ripe for improvement
             ttmp = []
             for i in xrange(count):
@@ -250,4 +255,4 @@ def spline(cps, n, splinea=(0, -1, 0), splineb=(0, -1, 0), **kwargs):
     for t in v:
         S.append([t**3, t**2, t, 1])
     return list(numpy.dot(numpy.array(S), MxC))
-
+#---end spline

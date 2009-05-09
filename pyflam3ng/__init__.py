@@ -401,6 +401,13 @@ class Palette(object):
             color = rgb2hls(color[0], color[1], color[2])
             self.array[i] = hls2rgb(color[0], color[1]+val, color[2])
 
+    def rotate(self, slots):
+        tmp = numpy.zeros((256,3))
+        tmp[:slots] = self.array[-slots:]
+        tmp[slots:] = self.array[:-slots]
+        self.array[:] = tmp[:]
+
+
     def random(self, h_ranges=[(0,1)], l_ranges=[(0,1)], s_ranges=[(0,1)],
                blocks=(32,64)):
 

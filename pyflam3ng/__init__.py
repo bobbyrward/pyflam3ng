@@ -102,9 +102,16 @@ def load_genome(flame_node=None, xml_source=None, genome_handle=None):
 class Point(object):
     """A 2d point in cartesian space"""
 
-    def __init__(self, x=0.0, y=0.0):
-        self.x = x
-        self.y = y
+    def __init__(self, x=0.0, y=0.0, seq=None):
+        if seq is not None:
+            self.x = seq[0]
+            self.y = seq[1]
+        else:
+            self.x = x
+            self.y = y
+
+    def clone(self):
+        return Point(self.x, self.y)
 
     def __iter__(self):
         yield self.x
@@ -155,18 +162,6 @@ class Point(object):
         return Point(self.x * rhs[0], self.y * rhs[1])
 
     def __div__(self, rhs):
-        return Point(self.x / rhs[0], self.y / rhs[1])
-
-    def __radd__(self, rhs):
-        return Point(self.x + rhs[0], self.y + rhs[1])
-
-    def __rsub__(self, rhs):
-        return Point(self.x - rhs[0], self.y - rhs[1])
-
-    def __rmul__(self, rhs):
-        return Point(self.x * rhs[0], self.y * rhs[1])
-
-    def __rdiv__(self, rhs):
         return Point(self.x / rhs[0], self.y / rhs[1])
 
     def __iadd__(self, rhs):
@@ -262,27 +257,41 @@ class Point(object):
 
 class Matrix(object):
     def __init__(self):
-        self._matrix = numpy.identity(2)
-        self.trans = Point(0, 0)
+        self._matrix = numpy.matrix([[1,0,0],[0,1,0],[0,0,1]])
+
+    def clone(self):
+        m = Matrix()
+        m._matrix = self._matrix.copy()
+        return m
 
     def transform(self, p):
-        return Point(self._matrix[0,0] * p.x + self._matrix[0,1] * p.y,
-                     self._matrix[1,0] * p.x + self._matrix[1,1] * p.y) + self.trans
+        return Point(self._matrix[0,0] * p[0] + self._matrix[1,0] * p[1] + self._matrix[2,0],
+                     self._matrix[0,1] * p[0] + self._matrix[1,1] * p[1] + self._matrix[2,1])
+
+    def transform_distance(self, p):
+        return Point(self._matrix[0,0] * p[0] + self._matrix[1,0] * p[1],
+                     self._matrix[0,1] * p[0] + self._matrix[1,1] * p[1])
 
     def rotate(self, degrees):
         radians = degrees * (180.0/math.pi)
         c = math.cos(radians)
         s = math.sin(radians)
 
-        m = numpy.matrix([[c, -s], [s, c]])
+        m = numpy.matrix([[c, -s, 0], [s, c, 0], [0, 0, 1]])
         self._matrix *= m
 
     def translate(self, pos):
-        self.trans += pos
+        m = numpy.matrix([[1, 0, 0], [0, 1, 0], [pos[0], pos[1], 1]])
+        self._matrix *= m
 
     def scale(self, point):
-        m = numpy.matrix([[point[0], 0], [0, point[1]]])
+        m = numpy.matrix([[point[0], 0, 0], [0, point[1], 0], [0, 0, 1]])
         self._matrix *= m
+
+    def inverse(self):
+        m = Matrix()
+        m._matrix = numpy.linalg.inv(self._matrix)
+        return m
 
     def __mul__(self, rhs):
         if hasattr(rhs, '_matrix'):
@@ -764,6 +773,9 @@ class Genome(object):
 
     def clone(self):
         return load_genome(xml_source=etree.tostring(self.flame_node))
+
+    def render(self, buffer, **kwargs):
+        return self.genome_handle.render(buffer, **kwargs)
 
     def random(self, variations=None, symmetry=False, num_xforms=2):
         if variations is None:

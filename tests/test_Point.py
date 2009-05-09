@@ -6,9 +6,13 @@ from pyflam3ng import Point
 class TestCase(unittest.TestCase):
     @print_test_name
     def testEquality(self):
-        self.assertTrue(Point(1.0, 2.0) == Point(1.0, 2.0))
+        self.assertTrue( Point(1.0, 2.0) == Point(1.0, 2.0))
         self.assertFalse(Point(1.0, 2.1) == Point(1.0, 2.0))
         self.assertFalse(Point(1.1, 2.0) == Point(1.0, 2.0))
+
+        self.assertTrue( Point(1.0, 2.0) == (1.0, 2.0))
+        self.assertFalse(Point(1.0, 2.1) == (1.0, 2.0))
+        self.assertFalse(Point(1.1, 2.0) == (1.0, 2.0))
 
     @print_test_name
     def testAddition(self):

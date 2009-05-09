@@ -110,6 +110,14 @@ class Point(object):
         yield self.x
         yield self.y
 
+    def __getitem__(self, key):
+        if key == 0:
+            return self.x
+        elif key == 1:
+            return self.y
+        else:
+            raise IndexError()
+
     def __len__(self):
         return 2
 
@@ -138,103 +146,55 @@ class Point(object):
     polar = property(_get_polar, _set_polar)
 
     def __add__(self, rhs):
-        try:
-            return Point(self.x + rhs.x, self.y + rhs.y)
-        except AttributeError:
-            return Point(self.x + rhs[0], self.y + rhs[1])
+        return Point(self.x + rhs[0], self.y + rhs[1])
 
     def __sub__(self, rhs):
-        try:
-            return Point(self.x - rhs.x, self.y - rhs.y)
-        except AttributeError:
-            return Point(self.x - rhs[0], self.y - rhs[1])
+        return Point(self.x - rhs[0], self.y - rhs[1])
 
     def __mul__(self, rhs):
-        try:
-            return Point(self.x * rhs.x, self.y * rhs.y)
-        except AttributeError:
-            return Point(self.x * rhs[0], self.y * rhs[1])
+        return Point(self.x * rhs[0], self.y * rhs[1])
 
     def __div__(self, rhs):
-        try:
-            return Point(self.x / rhs.x, self.y / rhs.y)
-        except AttributeError:
-            return Point(self.x / rhs[0], self.y / rhs[1])
+        return Point(self.x / rhs[0], self.y / rhs[1])
 
     def __radd__(self, rhs):
-        try:
-            return Point(self.x + rhs.x, self.y + rhs.y)
-        except AttributeError:
-            return Point(self.x + rhs[0], self.y + rhs[1])
+        return Point(self.x + rhs[0], self.y + rhs[1])
 
     def __rsub__(self, rhs):
-        try:
-            return Point(self.x - rhs.x, self.y - rhs.y)
-        except AttributeError:
-            return Point(self.x - rhs[0], self.y - rhs[1])
+        return Point(self.x - rhs[0], self.y - rhs[1])
 
     def __rmul__(self, rhs):
-        try:
-            return Point(self.x * rhs.x, self.y * rhs.y)
-        except AttributeError:
-            return Point(self.x * rhs[0], self.y * rhs[1])
+        return Point(self.x * rhs[0], self.y * rhs[1])
 
     def __rdiv__(self, rhs):
-        try:
-            return Point(self.x / rhs.x, self.y / rhs.y)
-        except AttributeError:
-            return Point(self.x / rhs[0], self.y / rhs[1])
+        return Point(self.x / rhs[0], self.y / rhs[1])
 
     def __iadd__(self, rhs):
-        try:
-            self.x += rhs.x
-            self.y += rhs.y
-        except AttributeError:
-            self.x += rhs[0]
-            self.y += rhs[1]
-
+        self.x += rhs[0]
+        self.y += rhs[1]
         return self
 
     def __isub__(self, rhs):
-        try:
-            self.x -= rhs.x
-            self.y -= rhs.y
-        except AttributeError:
-            self.x -= rhs[0]
-            self.y -= rhs[1]
-
+        self.x -= rhs[0]
+        self.y -= rhs[1]
         return self
 
     def __imul__(self, rhs):
-        try:
-            self.x *= rhs.x
-            self.y *= rhs.y
-        except AttributeError:
-            self.x *= rhs[0]
-            self.y *= rhs[1]
-
+        self.x *= rhs[0]
+        self.y *= rhs[1]
         return self
 
     def __idiv__(self, rhs):
-        try:
-            self.x /= rhs.x
-            self.y /= rhs.y
-        except AttributeError:
-            self.x /= rhs[0]
-            self.y /= rhs[1]
-
+        self.x /= rhs[0]
+        self.y /= rhs[1]
         return self
 
     def __eq__(self, rhs):
         if rhs is None:
             return False
 
-        try:
-            if float_equality(self.x, rhs.x) and float_equality(self.y, rhs.y):
-                return True
-        except AttributeError:
-            if float_equality(self.x, rhs[0]) and float_equality(self.x, rhs[1]):
-                return True
+        if float_equality(self.x, rhs[0]) and float_equality(self.y, rhs[1]):
+            return True
 
         return False
 
@@ -300,15 +260,35 @@ class Point(object):
         return self.in_rect(left, top, left + width, top + height)
 
 
-class Transform(object):
+class Matrix(object):
     def __init__(self):
-        self.m = numpy.identity(2)
+        self._matrix = numpy.identity(2)
         self.trans = Point(0, 0)
 
-    #def transform(p):
-    #    return Point(self.m[0,0] * p.x + self.m[0,1] * p.y,
-    #                 self.m[1,0] * p.x + self.m[1,1] * p.y) + self.trans
+    def transform(self, p):
+        return Point(self._matrix[0,0] * p.x + self._matrix[0,1] * p.y,
+                     self._matrix[1,0] * p.x + self._matrix[1,1] * p.y) + self.trans
 
+    def rotate(self, degrees):
+        radians = degrees * (180.0/math.pi)
+        c = math.cos(radians)
+        s = math.sin(radians)
+
+        m = numpy.matrix([[c, -s], [s, c]])
+        self._matrix *= m
+
+    def translate(self, pos):
+        self.trans += pos
+
+    def scale(self, point):
+        m = numpy.matrix([[point[0], 0], [0, point[1]]])
+        self._matrix *= m
+
+    def __mul__(self, rhs):
+        if hasattr(rhs, '_matrix'):
+            rhs = rhs._matrix
+
+        return self._matrix * rhs
 
 
 class Variations(object):

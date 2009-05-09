@@ -7,7 +7,6 @@ __all__ = [
     'clip',
     'rgb2hls',
     'hls2rgb',
-    'in_ranges',
 ]
 
 

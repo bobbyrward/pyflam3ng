@@ -438,6 +438,20 @@ class Palette(object):
                 self.array[index] = hls2rgb(h,l,s)
                 index += 1
 
+    def from_seed(self, seed, c_split=0, split=90, dist=64, space='rgb'):
+        c_split /= 360.0
+        split /= 360.0
+        h,l,s = rgb2hls(seed)
+        comp = hls2rgb(h+csplit+0.5,l,s)
+        lspl = hls2rgb(h-split,l,s)
+        rspl = hls2rgb(h+split,l,s)
+
+        self.array[:dist] = get_spline(CP(comp), CP(lspl), dist, curve='cos')
+        self.array[dist:128] = get_spline(CP(lspl), CP(seed), 128-dist, curve='cos')
+        self.array[127:255-dist] = get_spline(CP(seed), CP(rspl), 128-dist, curve='cos')
+        self.array[255-dist:] = get_spline(CP(rspl), CP(comp), dist, curve='cos')
+
+
     def from_file(self, filename):
         img = Image.open(filename)
         bin = map(ord, img.tostring())

@@ -212,11 +212,13 @@ cdef class GenomeHandle:
         cdef int num_variations = len(variations)
         cdef int *vars = <int*>stdlib.malloc(sizeof(int) * num_variations)
 
-        for var_name in enumerate(variations):
+        for idx, var_name in enumerate(variations):
             try:
-                var_idx = variation_list.index(variations)
+                var_idx = variation_list.index(var_name)
             except ValueError:
                 raise KeyError('unknown variation: "%s"' % var_name)
+
+            vars[idx] = var_idx
 
         flam3_random(self._genome, vars, num_variations, symmetry, num_xforms)
 

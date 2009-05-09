@@ -32,7 +32,7 @@ cdef extern from "string.h":
 
 
 cdef extern from "Python.h":
-    int PyObject_AsWriteBuffer( object obj, void **buffer, Py_ssize_t *buffer_len)
+    int PyObject_AsWriteBuffer(object, void **, Py_ssize_t *)    except -1
 
 
 cdef enum:

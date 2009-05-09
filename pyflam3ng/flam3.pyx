@@ -174,6 +174,21 @@ cdef class RenderBuffer:
 
             self._buffer = <unsigned char*>stdlib.realloc(self._buffer, width * height * self._bytes_per_pixel)
 
+    def write_to_legacy_buffer(RenderBuffer self, object legacy_buffer):
+        if self._buffer == NULL:
+            raise RuntimeError('Buffer is empty')
+
+        cdef unsigned char* dest_p = NULL
+        cdef Py_ssize_t dest_len = 0
+        cdef Py_ssize_t total_len = self._width * self._height * self._bytes_per_pixel
+
+        PyObject_AsWriteBuffer(legacy_buffer, <void**>&dest_p, &dest_len)
+
+        if dest_len < total_len:
+            raise BufferError("buffer isn't large enough")
+
+        memmove(dest_p, self._buffer, total_len)
+
     property width:
         def __get__(RenderBuffer self):
             return self._width

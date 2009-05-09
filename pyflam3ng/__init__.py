@@ -120,10 +120,10 @@ class Point(object):
         return self.x**2 + self.y**2
 
     def magnitude(self):
-        return sqrt(self.magnitude_squared())
+        return math.sqrt(self.magnitude_squared())
 
     def angle_radians(self):
-        return atan2(self.y, self.x)
+        return math.atan2(self.y, self.x)
 
     def angle(self):
         return self.angle_radians() * (180.0/math.pi)
@@ -132,8 +132,8 @@ class Point(object):
         return self.magnitude(), self.angle()
 
     def _set_polar(self, angle, length):
-        self.x = math.cos(angle * pi / 180.0)
-        self.y = math.sin(angle * pi / 180.0)
+        self.x = math.cos(angle * math.pi / 180.0)
+        self.y = math.sin(angle * math.pi / 180.0)
 
     polar = property(_get_polar, _set_polar)
 
@@ -240,16 +240,16 @@ class Point(object):
 
     def in_circle(self, center, radius):
         # find the difference between the two points
-        u = p - c
+        u = self - center
 
         # find the magnitude squared of the difference
         mm  = u.magnitude_squared()
 
         # if the magnitude is less than the radius it is inside the circle
-        return (r*r - mm) >= 0.0
+        return (radius*radius - mm) >= 0.0
 
     def in_triangle(self, v0, v1, v2):
-        e0 = p - v0
+        e0 = self - v0
         e1 = v1 - v0
         e2 = v2 - v0
 
@@ -291,7 +291,7 @@ class Point(object):
         if self.x < left or self.x > right:
             return False
 
-        if self.x < top or self.x > bottom:
+        if self.y < top or self.y > bottom:
             return False
 
         return True

@@ -32,36 +32,69 @@ class TestCase(unittest.TestCase):
 
     @print_test_name
     def testMultiplication(self):
-        self.assertTrue(False)
+        p = Point(10.1, 20.2)
+
+        self.assertEqual(p * Point(1.3, 2.5), Point(13.13, 50.5))
+        self.assertEqual(p * Point(7.2, 12.41), Point(72.72, 250.682))
+
+        p *= Point(5.41, 8.14)
+        self.assertEqual(p, Point(54.641, 164.428))
 
     @print_test_name
     def testDivision(self):
-        self.assertTrue(False)
+        p = Point(10.1, 20.2)
+
+        self.assertEqual(p / Point(1.3, 2.5), Point(7.7692307692307683, 8.0800000000000001))
+        self.assertEqual(p / Point(7.2, 12.41), Point(1.4027777777777777, 1.627719580983078))
+
+        p /= Point(5.41, 8.14)
+        self.assertEqual(p, Point(1.8669131238447318, 2.4815724815724813))
 
     @print_test_name
     def testMagnitude(self):
-        self.assertTrue(False)
+        p = Point(10.1, 20.2)
+        self.assertAlmostEqual(p.magnitude(), 22.584286572747875)
 
     @print_test_name
     def testAngle(self):
-        self.assertTrue(False)
+        p = Point(10.1, 20.2)
+        self.assertAlmostEqual(p.angle(), 63.43494882292201)
 
     @print_test_name
     def testPolar(self):
-        self.assertTrue(False)
+        p = Point(10.1, 20.2)
+        self.assertEqual(p.polar, (22.584286572747875, 63.43494882292201))
 
     @print_test_name
     def testInCircle(self):
-        self.assertTrue(False)
+        p = Point(10.1, 20.2)
+        self.assertFalse(p.in_circle(Point(0.0, 0.0), 15.0))
+        self.assertTrue(p.in_circle(Point(0.0, 0.0), 22.6))
 
     @print_test_name
     def testInTriangle(self):
-        self.assertTrue(False)
+        p = Point(6.0, 6.0)
+
+        self.assertTrue(p.in_triangle(
+                Point(5.0, 5.0),
+                Point(7.0, 5.0),
+                Point(6.0, 7.0)
+            ))
+
+        self.assertFalse(p.in_triangle(
+                Point(5.0, 5.0),
+                Point(6.0, 5.0),
+                Point(5.0, 6.0)
+            ))
 
     @print_test_name
     def testInRect(self):
-        self.assertTrue(False)
+        p = Point(10.1, 20.2)
+        self.assertFalse(p.in_rect(11, 21, 15, 22))
+        self.assertTrue(p.in_rect(10, 20, 15, 22))
 
+        self.assertFalse(p.in_rect_wh(11, 21, 4, 1))
+        self.assertTrue(p.in_rect_wh(10, 20, 4, 1))
 
 
 

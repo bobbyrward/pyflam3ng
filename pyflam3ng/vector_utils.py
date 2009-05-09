@@ -152,15 +152,31 @@ def get_pad(target, neighbor, n):
         return CP(val)
 #---end get_pad
 
-def get_spline(cps, n=50, loop=False, curve='lin', a=1, b=0.5, c=1):
+def get_spline(my_cps, n=50, loop=False, curve='lin', a=1, b=0.5, c=1):
     """Takes list CPs and returns full spline.
 
     Arguments:
-        cps     - List of CP objects. All vals must have same dimensions.
+        my_cps  - List of CP objects. All vals must have same dimensions.
         loop    - Does the animation loop?
         curve   - Curve shape. This will eventually be done per-segment.
         a, b, c - Curve params.
     """
+    if len(my_cps)<2:
+        raise ValueError('Need 2 or more CPs')
+
+    if loop: seg = len(my_cps)
+    else:    seg = len(my_cps)-1
+    
+    cps = my_cps[:]
+
+    if loop:
+        cps.append(my_cps[0])
+        cps.append(my_cps[1])
+        cps.insert(0, my_cps[-1])
+    else:
+        cps.append(get_pad(my_cps[-2], my_cps[-1], -n))
+        cps.insert(0, get_pad(my_cps[0], my_cps[1], n))
+
     vals = []
     if type(cps[0].val)==int or type(cps[0].val)==float:
         #1D data
@@ -176,70 +192,32 @@ def get_spline(cps, n=50, loop=False, curve='lin', a=1, b=0.5, c=1):
             vals.append(tmp)
         count = len(cps[0].val)
 
-    tmp =[]
-    if loop:
-        for i in xrange(len(cps)):
-            #handle first seg: -1, 0, 1, 2
-            if i==0:
-                tcps = cps[-1:] + cps[:3]
-            #handle last seg: n-1 n 0 1
-            elif i==len(cps)-1:
-                tcps = cps[-2:] + cps[:2]
-            elif i==len(cps)-2:
-                tcps = cps[-3:] + cps[:1]
-            else:
-                tcps = cps[i-1:i+3]
+    tmp = []
+    for i in xrange(seg):
+        tcps = cps[i:i+4]
+        for c in tcps: print c.val, 
+        print
 
-            print tcps
-
-            if count==1:
-                tmp.extend(spline([cp.val for cp in tcps], n, tcps[1].spline,
-                           tcps[2].spline, curve=curve, a=a, b=b, c=c))
-            else:
-                #This code is ripe for improvement
-                ttmp = []
-                for i in xrange(count):
-                    ttmp.append(spline([cp.val[i] for cp in tcps], n, tcps[1].spline,
-                                tcps[2].spline, curve=curve, a=a, b=b, c=c))
-                reord = []
-                for i in xrange(len(ttmp[0])):
-                    row = []
-                    for j in xrange(count):
-                        row.append(tmp[j][i])
-                    reord.append(row)
-                tmp.extend(reord)
-                #end improve section
-    else:
-        for i in xrange(len(cps)-1):
-            #handle first seg: pad, 0, 1, 2
-            if i==0:
-                tcps = [get_pad(cps[0], cps[1], n),] + cps[:3]
-            #handle last seg: n-2, n-1, n, pad
-            elif i==len(cps)-2:
-                tcps = cps[-3:] + [get_pad(cps[-1], cps[-2], -n),]
-            else:
-                tcps = cps[i-1:i+3]
-
-            print tcps
-
-            if count==1:
-                tmp.extend(spline([cp.val for cp in tcps], n, tcps[1].spline,
-                           tcps[2].spline, curve=curve, a=a, b=b, c=c))
-            else:
-                ttmp = []
-                for i in xrange(count):
-                    ttmp.append(spline([cp.val[i] for cp in tcps], n, tcps[1].spline,
-                                tcps[2].spline, curve=curve, a=a, b=b, c=c))
-                reord = []
-                for i in xrange(len(ttmp[0])):
-                    row = []
-                    for j in xrange(count):
-                        row.append(tmp[j][i])
-                    reord.append(row)
-                tmp.extend(reord)
+        if count==1:
+            tmp.extend(spline([cp.val for cp in tcps], n, tcps[1].spline,
+                       tcps[2].spline, curve=curve, a=a, b=b, c=c))
+        else:
+            #This code is ripe for improvement
+            ttmp = []
+            for i in xrange(count):
+                ttmp.append(spline([cp.val[i] for cp in tcps], n, tcps[1].spline,
+                            tcps[2].spline, curve=curve, a=a, b=b, c=c))
+            reord = []
+            for i in xrange(len(ttmp[0])):
+                row = []
+                for j in xrange(count):
+                    row.append(tmp[j][i])
+                reord.append(row)
+            tmp.extend(reord)
+            #end improve section
+    #---end segments    
     return tmp
 #---end get_spline
-
 
 def spline(cps, n, splinea=(0, -1, 0), splineb=(0, -1, 0), **kwargs):
     """Generates a smoothed spline from a list of 4 control points.

@@ -1,6 +1,16 @@
 from math import *
 import colorsys
 
+__all__ = [
+    'polar',
+    'rect',
+    'clip',
+    'rgb2hls',
+    'hls2rgb',
+    'in_ranges',
+]
+
+
 def polar(x, y):
     len = sqrt(x**2 + y**2)
     ang = atan2(y, x) * (180.0/pi)

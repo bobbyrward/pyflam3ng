@@ -24,10 +24,10 @@
 
 
 all:
-	 python setup.py build_ext --inplace
+	python setup.py build_ext --inplace
 	 
 test:
-	 python tests/test.py  
+	python tests/test.py && if [ -f test.failures ]; then cat test.failures; fi
 
 clean:
 	-rm -r build 

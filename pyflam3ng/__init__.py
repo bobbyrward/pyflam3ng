@@ -20,16 +20,27 @@
 #  the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 #  Boston, MA 02111-1307, USA.
 ##############################################################################
+import sys
 import itertools
+import random
+import math
 from collections import defaultdict
 
+import numpy
+import Image
 from lxml import etree
-import numpy, random, Image
 from func import *
-from variations import variation_registry
 
+from .variations import variation_registry
 from . import flam3
 from . import util
+
+
+EPSILON = 0.0000000000001
+
+def float_equality(x, y):
+    return abs(x-y) < (x * sys.float_info.epsilon)
+
 
 def load_flame(xml_source=None, fd=None, filename=None):
     """Load a set of genomes from an xml document
@@ -92,13 +103,12 @@ class Point(object):
     """A 2d point in cartesian space"""
 
     def __init__(self, x=0.0, y=0.0):
-        self._x = x
-        self._y = y
-        self._len, self._ang = polar(self._x, self._y)
+        self.x = x
+        self.y = y
 
     def __iter__(self):
-        yield self._x
-        yield self._y
+        yield self.x
+        yield self.y
 
     def __len__(self):
         return 2
@@ -106,61 +116,138 @@ class Point(object):
     def __repr__(self):
         return '<Point x=%f y=%f>' % (self.x, self.y)
 
-    def _get_x(self):
-        if self._x > -1E-06 and self._x < 1E-06: self._x = 0.0
-        return self._x
+    def magnitude_squared(self):
+        return self.x**2 + self.y**2
 
-    def _set_x(self, x):
-        self._x = x
-        self._len, self._ang = polar(self._x, self._y)
+    def magnitude(self):
+        return sqrt(self.magnitude_squared())
 
-    x = property(_get_x, _set_x)
+    def angle_radians(self):
+        return atan2(self.y, self.x)
 
-    def _get_y(self):
-        if self._y > -1E-06 and self._y < 1E-06: self._y = 0.0
-        return self._y
-
-    def _set_y(self, y):
-        self._y = y
-        self._len, self._ang = polar(self._x, self._y)
-
-    y = property(_get_y, _set_y)
-
-    def _get_rect(self):
-        return self._x, self._y
-
-    def _set_rect(self, coord):
-        self._x, self._y = coord
-        self._len, self._ang = polar(self._x, self._y)
-
-    rect = property(_get_rect, _set_rect)
-
-    def _get_len(self):
-        return self._len
-
-    def _set_len(self, len):
-        self._len = len
-        self._x, self._y = rect(self._len, self._ang)
-
-    len = property(_get_len, _set_len)
-
-    def _get_ang(self):
-        return self._ang
-
-    def _set_ang(self, ang):
-        self._ang = ang
-        self._x, self._y = rect(self._len, self._ang)
-
-    ang = property(_get_ang, _set_ang)
+    def angle(self):
+        return self.angle_radians() * (180.0/math.pi)
 
     def _get_polar(self):
-        return self._len, self._ang
+        return self.magnitude(), self.angle()
 
-    def _set_polar(self, coord):
-        self._len, self._ang = coord
-        self._x, self._y = rect(self._len, self._ang)
+    def _set_polar(self, angle, length):
+        self.x = math.cos(angle * pi / 180.0)
+        self.y = math.sin(angle * pi / 180.0)
 
     polar = property(_get_polar, _set_polar)
+
+    def __add__(self, rhs):
+        try:
+            return Point(self.x + rhs.x, self.y + rhs.y)
+        except AttributeError:
+            return Point(self.x + rhs[0], self.y + rhs[1])
+
+    def __sub__(self, rhs):
+        try:
+            return Point(self.x - rhs.x, self.y - rhs.y)
+        except AttributeError:
+            return Point(self.x - rhs[0], self.y - rhs[1])
+
+    def __mul__(self, rhs):
+        try:
+            return Point(self.x * rhs.x, self.y * rhs.y)
+        except AttributeError:
+            return Point(self.x * rhs[0], self.y * rhs[1])
+
+    def __div__(self, rhs):
+        try:
+            return Point(self.x / rhs.x, self.y / rhs.y)
+        except AttributeError:
+            return Point(self.x / rhs[0], self.y / rhs[1])
+
+    def __radd__(self, rhs):
+        try:
+            return Point(self.x + rhs.x, self.y + rhs.y)
+        except AttributeError:
+            return Point(self.x + rhs[0], self.y + rhs[1])
+
+    def __rsub__(self, rhs):
+        try:
+            return Point(self.x - rhs.x, self.y - rhs.y)
+        except AttributeError:
+            return Point(self.x - rhs[0], self.y - rhs[1])
+
+    def __rmul__(self, rhs):
+        try:
+            return Point(self.x * rhs.x, self.y * rhs.y)
+        except AttributeError:
+            return Point(self.x * rhs[0], self.y * rhs[1])
+
+    def __rdiv__(self, rhs):
+        try:
+            return Point(self.x / rhs.x, self.y / rhs.y)
+        except AttributeError:
+            return Point(self.x / rhs[0], self.y / rhs[1])
+
+    def __iadd__(self, rhs):
+        try:
+            self.x += rhs.x
+            self.y += rhs.y
+        except AttributeError:
+            self.x += rhs[0]
+            self.y += rhs[1]
+
+        return self
+
+    def __isub__(self, rhs):
+        try:
+            self.x -= rhs.x
+            self.y -= rhs.y
+        except AttributeError:
+            self.x -= rhs[0]
+            self.y -= rhs[1]
+
+        return self
+
+    def __imul__(self, rhs):
+        try:
+            self.x *= rhs.x
+            self.y *= rhs.y
+        except AttributeError:
+            self.x *= rhs[0]
+            self.y *= rhs[1]
+
+        return self
+
+    def __idiv__(self, rhs):
+        try:
+            self.x /= rhs.x
+            self.y /= rhs.y
+        except AttributeError:
+            self.x /= rhs[0]
+            self.y /= rhs[1]
+
+        return self
+
+    def __eq__(self, rhs):
+        if rhs is None:
+            return False
+
+        try:
+            if float_equality(self.x, rhs.x) and float_equality(self.y, rhs.y):
+                return True
+        except AttributeError:
+            if float_equality(self.x, rhs[0]) and float_equality(self.x, rhs[1]):
+                return True
+
+        return False
+
+
+class Transform(object):
+    def __init__(self):
+        self.m = numpy.identity(2)
+        self.trans = Point(0, 0)
+
+    #def transform(p):
+    #    return Point(self.m[0,0] * p.x + self.m[0,1] * p.y,
+    #                 self.m[1,0] * p.x + self.m[1,1] * p.y) + self.trans
+
 
 
 class Variations(object):

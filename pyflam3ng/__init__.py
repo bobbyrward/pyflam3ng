@@ -167,7 +167,7 @@ class Variations(object):
     """Wraps the variations in use by an XForm"""
 
     def __init__(self):
-        self._values = {}
+        self._values = defaultdict(lambda: 0.0)
         self._variables = {}
 
     def __getitem__(self, key):
@@ -178,6 +178,9 @@ class Variations(object):
 
     def __delitem__(self, key):
         del self.values[key]
+
+    def __contains__(self, key):
+        return key in self._values
 
     def variation_vars(self, variation_name=None):
         if variation_name in self._variables:
@@ -196,7 +199,7 @@ class Variations(object):
         else:
             raise KeyError('Unknown variation')
 
-    def get_variable(self, variation_name, variable_name, value):
+    def get_variable(self, variation_name, variable_name):
         if variation_name in self._variables:
             vars = self._variables[variation_name]
 
@@ -560,6 +563,9 @@ class Genome(object):
             self._init_from_node(flame_node)
         elif genome_handle is not None:
             self._init_from_handle(genome_handle)
+        else:
+            self.genome_handle = flam3.GenomeHandle()
+            self.random()
 
     def set_defaults(self):
         self.time = 0.0
@@ -628,7 +634,13 @@ class Genome(object):
         self.genome_handle = genome_handle
         self._refresh_self_from_handle()
 
-    def random(self, variations, symmetry=False, num_xforms=2):
+    def clone(self):
+        return load_genome(xml_source=etree.tostring(self.flame_node))
+
+    def random(self, variations=None, symmetry=False, num_xforms=2):
+        if variations is None:
+            variations = flam3.get_variation_list()
+
         self.genome_handle.random(variations, symmetry, num_xforms)
         self._refresh_self_from_handle()
 
@@ -658,6 +670,8 @@ class Genome(object):
         self.center.fill(buffer(numpy.array(whitespace_array('center'))))
         self.background.fill(buffer(numpy.array(whitespace_array('background'))))
 
+        self.name = 'unknown'
+        scalar_attrib('name', coerce_type=str)
         scalar_attrib('time')
         scalar_attrib('scale', 'pixels_per_unit')
         scalar_attrib('zoom')

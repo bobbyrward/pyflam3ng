@@ -188,7 +188,6 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', p1=1, p2=0.5, p3=1):
         my_cps.append(my_cps[2])
         my_cps.insert(0, my_cps[-1])
     else:
-        print my_cps
         pad1 = get_pad(my_cps[0], my_cps[1], n)
         pad2 = get_pad(my_cps[-2], my_cps[-1], -n)
         vals[0] = pad1.val

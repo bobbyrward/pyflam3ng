@@ -127,13 +127,12 @@ class CP(object):
     spline = property(_get_spline, _set_spline, doc="Spline parameters in a list")
 #---end CP
 
-def get_pad(target, neighbor, n):
+def get_pad(target, neighbor):
     """Returns a CP for padding interp with <4 points.
 
     Arguments:
         target  - CP that's being padded
         neighbor- CP's closest neighbor
-        n       - Distance from target to neighbor (- if after, + if before)
     """
     if type(target.val)==int or type(target.val)==float:
         count = 1
@@ -141,12 +140,12 @@ def get_pad(target, neighbor, n):
         count = len(target.val)
 
     if count==1:
-        diff = (target.val-neighbor.val)*(n/abs(n))
+        diff = (target.val-neighbor.val)
         return CP(target.val+diff)
     else:
         val = []
         for i in xrange(count):
-            diff = (target.val[i]-neighbor.val[i])*(n/abs(n))
+            diff = (target.val[i]-neighbor.val[i])
             val.append(target.val[i]-diff)
         return CP(val)
 #---end get_pad
@@ -168,10 +167,10 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', p1=1, p2=0.5, p3=1):
     else:    seg = len(my_cps)-1
     nf = seg * n
 
-    if type(my_cps[0].val)==int or type(cps[0])==float:
+    if type(my_cps[0].val)==int or type(my_cps[0])==float:
         count = 1
     else:
-        count = len(cps[0].val)
+        count = len(my_cps[0].val)
 
     vals = numpy.zeros((seg+3, count), numpy.float32)
 
@@ -188,8 +187,8 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', p1=1, p2=0.5, p3=1):
         my_cps.append(my_cps[2])
         my_cps.insert(0, my_cps[-1])
     else:
-        pad1 = get_pad(my_cps[0], my_cps[1], n)
-        pad2 = get_pad(my_cps[-2], my_cps[-1], -n)
+        pad1 = get_pad(my_cps[0], my_cps[1])
+        pad2 = get_pad(my_cps[-1], my_cps[-2])
         vals[0] = pad1.val
         for i in xrange(len(my_cps)):
             vals[i+1] = my_cps[i].val
@@ -203,10 +202,10 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', p1=1, p2=0.5, p3=1):
         tcps = my_cps[i:i+4]
         i0, i1 = i*n, (i+1)*n
         for j in xrange(count):
-            sp_tmp = spline(vals[i:i+4], n, tcps[1].spline, tcps[2].spline,
+            tvals = vals[i:i+4, j]
+            sp_tmp = spline(tvals, n, tcps[1].spline, tcps[2].spline,
                             curve=curve, p1=p1, p2=p2, p3=p3)
-            sp_tmp = sp_tmp.transpose()
-            tmp[j][i0:i1] = sp_tmp[j]
+            tmp[j][i0:i1] = sp_tmp
     #---end segments
     return tmp
 #---end get_spline
@@ -225,7 +224,6 @@ def spline(cps, n, splinea=(0, -1, 0), splineb=(0, -1, 0), **kwargs):
 
     t = crange(0, 1, n)
     curve_mod = crange(0, cps[2]-cps[1], n, **kwargs) - crange(0, cps[2]-cps[1], n)
-    curve_mod.resize(len(curve_mod),1)
     
     ta, ca, ba = splinea
     tb, cb, bb = splineb
@@ -238,8 +236,7 @@ def spline(cps, n, splinea=(0, -1, 0), splineb=(0, -1, 0), **kwargs):
                     ,[2*fa,-6-2*fa+2*fb+fc,6-2*fb-fc+fd,-fd]
                     ,[-fa,fa-fb,fb,0]
                     ,[0,2,0,0]], numpy.float32)/2.0
-    C = numpy.array(cps, numpy.float32)
-    MxC = numpy.dot(M,C)
+    MxC = numpy.dot(M,cps)
     S = numpy.zeros((len(t),4), numpy.float32)
     for i in xrange(len(t)):
         S[i] = [t[i]**3, t[i]**2, t[i], 1]

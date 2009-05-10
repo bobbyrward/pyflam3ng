@@ -28,6 +28,7 @@ from collections import defaultdict
 
 import numpy
 import Image
+import copy
 from lxml import etree
 from func import *
 
@@ -305,7 +306,7 @@ class Variations(object):
     """Wraps the variations in use by an XForm"""
 
     def __init__(self):
-        self._values = defaultdict(lambda: 0.0)
+        self._values = {}
         self._variables = {}
 
     def __getitem__(self, key):
@@ -521,6 +522,57 @@ class Xform(object):
 
         if xml_node is not None:
             self._load_xml(xml_node)
+
+    def copy(self):
+        return copy.deepcopy(self)
+
+    def get_pad(self):
+        hole_vars = ['spherical', 'ngon', 'julian', 'juliascope', 'polar'
+                    ,'wedge_sph', 'wedge_julia']
+        pad = self.copy()
+        pad.coefs = [0, 1, 1, 0, 0, 0]
+        pad.weight = 0
+        pad.symmetry = 1
+        
+        if len(set(pad.vars.values.keys()).intersection(hole_vars)) > 0:
+            pad.coefs = [-1, 0, 0, 1, 0, 0]
+            pad.vars.set_variation('linear', -1)
+        if 'rectangles' in pad.vars.values.keys():
+            pad.vars.set_variation('rectangles', 1)
+            pad.vars.set_variable('rectangles', 'x', 0)
+            pad.vars.set_variable('rectangles', 'y', 0)
+        if 'rings2' in pad.vars.values.keys():
+            pad.vars.set_variation('rings2', 1)
+            pad.vars.set_variable('rings2', 'val', 0)
+        if 'fan2' in pad.vars.values.keys():
+            pad.vars.set_variation('fan2', 1)
+            pad.vars.set_variable('fan2', 'x', 0)
+            pad.vars.set_variable('fan2', 'y', 0)
+        if 'blob' in pad.vars.values.keys():
+            pad.vars.set_variation('blob', 1)
+            pad.vars.set_variable('blob', 'low', 1)
+            pad.vars.set_variable('blob', 'high', 1)
+            pad.vars.set_variable('blob', 'waves', 1)
+        if 'perspective' in pad.vars.values.keys():
+            pad.vars.set_variation('perspective', 1)
+            pad.vars.set_variable('perspective', 'angle' , 0)
+        if 'curl' in pad.vars.values.keys():
+            pad.vars.set_variation('curl', 1)
+            pad.vars.set_variable('curl', 'c1', 0)
+            pad.vars.set_variable('curl', 'c2', 0)
+        if 'super_shape' in pad.vars.values.keys():
+            pad.vars.set_variation('super_shape', 1)
+            pad.vars.set_variable('super_shape', 'n1', 2)
+            pad.vars.set_variable('super_shape', 'n2', 2)
+            pad.vars.set_variable('super_shape', 'n3', 2)
+            pad.vars.set_variable('super_shape', 'rnd', 0)
+            pad.vars.set_variable('super_shape', 'holes', 0)
+        if 'fan' in pad.vars.values.keys():
+            pad.vars.set_variation('fan', 1)
+        if 'rings' in pad.vars.values.keys():
+            pad.vars.set_variation('rings', 1)
+        #tot = sum(pad.vars.values.values())
+        #for v in pad.vars.values: pad.vars.values[v] /= tot
 
     def rotate_x(self, deg):
         self._x.ang += deg

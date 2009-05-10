@@ -407,7 +407,6 @@ class Palette(object):
         tmp[slots:] = self.array[:-slots]
         self.array[:] = tmp[:]
 
-
     def random(self, h_ranges=[(0,1)], l_ranges=[(0,1)], s_ranges=[(0,1)],
                blocks=(32,64)):
 
@@ -463,10 +462,10 @@ class Palette(object):
             raise ValueError('Invalid color space')
 
         tmp = numpy.zeros((256,3))
-        tmp[:dist] = numpy.array(vu.get_spline([vu.CP(comp), vu.CP(lspl)], dist, curve=curve))
-        tmp[dist:128] = numpy.array(vu.get_spline([vu.CP(lspl), vu.CP(seed)], 128-dist, curve=curve))
-        tmp[128:256-dist] = numpy.array(vu.get_spline([vu.CP(seed), vu.CP(rspl)], 128-dist, curve=curve))
-        tmp[256-dist:] = numpy.array(vu.get_spline([vu.CP(rspl), vu.CP(comp)], dist, curve=curve))
+        tmp[:dist] = vu.get_spline([vu.CP(comp), vu.CP(lspl)], dist, curve=curve)
+        tmp[dist:128] = vu.get_spline([vu.CP(lspl), vu.CP(seed)], 128-dist, curve=curve)
+        tmp[128:256-dist] = vu.get_spline([vu.CP(seed), vu.CP(rspl)], 128-dist, curve=curve)
+        tmp[256-dist:] = vu.get_spline([vu.CP(rspl), vu.CP(comp)], dist, curve=curve)
 
         if space=='hls':
             for i in xrange(256):
@@ -474,6 +473,24 @@ class Palette(object):
 
         self.array[:] = tmp[:]
 
+    def from_seeds(self, seeds, space='rgb', curve='cos'):
+        ns = len(seeds)
+        d = 256/ns
+        r = 256%ns
+        ds = []
+        for i in xrange(ns):
+            if space=='hls':
+                seeds[i] = rgb2hls(*seeds[i])
+            if i+1<=r: ds.append(d+1)
+            else:      ds.append(d)
+        tmp = numpy.zeros((256,3))
+        for i in xrange(ns):
+            v = vu.get_spline([vu.CP(seeds[i-1]), vu.CP(seeds[i])], ds[i], curve=curve)
+            tmp[sum(ds[0:i]):sum(ds[0:i+1])] = v
+        if space=='hls':
+            for i in xrange(256):
+                tmp[i] = hls2rgb(*tmp[i])
+        self.array[:] = tmp[:]
 
     def from_file(self, filename):
         img = Image.open(filename)
@@ -484,7 +501,6 @@ class Palette(object):
             idx = 3*(x + img.size[0]*y)
             self.array[i] = bin[idx:idx+3]
         self.smooth()
-
 
 class Xform(object):
     def __init__(self, xml_node=None):

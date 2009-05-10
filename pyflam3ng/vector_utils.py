@@ -36,72 +36,72 @@ def crange(x, y, n, curve='lin', a=1.0, b=0.5, c=1.0):
     m = float(n)
     tmp = numpy.zeros(n, numpy.float32)
 
-    if curve not in ['plin', 'ppar', 'psin', 'pcos']:
-        #Discrete
-        if   curve=='exp':
-            d = y-x
-            for i in xrange(n):
-                tmp[i] = d*(1-math.exp(-a*(i/m)))/(1-math.exp(-a))
-        elif curve=='par':
-            d = (y-x)/(m**2)
-            for i in xrange(n):
-                tmp[i] = x+d*(i**2)
-        elif curve=='npar':
-            d = (y-x)/(m**2)
-            for i in xrange(n):
-                tmp[i] = y-d*((n-i)**2)
-        elif curve=='cos':
-            d = y-x
-            for i in xrange(n):
-                tmp[i] = (x+d*((math.cos(math.pi + (i/m)*math.pi))+1)/2)**a
-        elif curve=='sinh':
-            d = y-x
-            tmp[0] = x
-            for i in xrange(1,n):
-                tmp[i] = x+((math.sinh(a*(2*i-m)/m)-math.sinh(-a))/(2*math.sinh(a*(2*n-m)/m)/d))
-        elif curve=='tanh':
-            d = y-x
-            tmp[0] = x
-            for i in xrange(1,n):
-                tmp[i] = x+((math.tanh(a*(2*i-m)/m)-math.tanh(-a))/(2*math.tanh(a*(2*n-m)/m)/d))
+    if   curve=='lin':
+        d = (y-x)/m
+        for i in xrange(n):
+            tmp[i] = x+d*i
+    elif curve=='par':
+        d = (y-x)/(m**2)
+        for i in xrange(n):
+            tmp[i] = x+d*(i**2)
+    elif curve=='npar':
+        d = (y-x)/(m**2)
+        for i in xrange(n):
+            tmp[i] = y-d*((n-i)**2)
+    elif curve=='cos':
+        d = y-x
+        for i in xrange(n):
+            tmp[i] = (x+d*((math.cos(math.pi + (i/m)*math.pi))+1)/2)**a
+    elif curve=='sinh':
+        d = y-x
+        tmp[0] = x
+        for i in xrange(1,n):
+            tmp[i] = x+((math.sinh(a*(2*i-m)/m)-math.sinh(-a))/
+                        (2*math.sinh(a*(2*n-m)/m)/d))
+    elif curve=='tanh':
+        d = y-x
+        tmp[0] = x
+        for i in xrange(1,n):
+            tmp[i] = x+((math.tanh(a*(2*i-m)/m)-math.tanh(-a))/
+                        (2*math.tanh(a*(2*n-m)/m)/d))
+    elif curve=='exp':
+        d = y-x
+        for i in xrange(n):
+            tmp[i] = d*(1-math.exp(-a*(i/m)))/(1-math.exp(-a))
+    elif curve=='plin':
+        n1=int(b*n)
+        n2=n-n1
+        mod = list(crange(0,a,n1,curve='lin'))
+        mod.extend(list(crange(a,0,n2,curve='lin')))
+        tmp = crange(x,y,n,curve='lin')
+        for i in xrange(n):
+            tmp[i] += mod[i]
+    elif curve=='ppar':
+        n1=int(b*n)
+        n2=n-n1
+        mod = []
+        tmp = crange(x,y,n,curve='lin')
+        if c in [0, 1]: #+
+            mod.extend(list(crange(0,a,n1,curve='par')))
         else:
-            d = (y-x)/m
-            for i in xrange(n):
-                tmp[i] = x+d*i
+            mod.extend(list(crange(0,a,n1,curve='npar')))
+        if c in [0, 3]: #+
+            mod.extend(list(crange(a,0,n2,curve='par')))
+        else:
+            mod.extend(list(crange(a,0,n2,curve='npar')))
+        for i in xrange(n):
+            tmp[i] += mod[i]
+    elif curve=='psin':
+        tmp = crange(x,y,n,curve='lin')
+        for i in xrange(n):
+            tmp[i] += a*math.sin((i/m)*math.pi*2*c)#**b
+    elif curve=='pcos':
+        d = y-x
+        tmp = crange(x,y,n,'lin')
+        for i in xrange(n):
+            tmp[i] += (a*((math.cos(math.pi + (i/m)*math.pi*2*c))+1)/2)**b
     else:
-        #Periodic
-        if   curve=='plin':
-            n1=int(b*n)
-            n2=n-n1
-            mod = list(crange(0,a,n1,curve='lin'))
-            mod.extend(list(crange(a,0,n2,curve='lin')))
-            tmp = crange(x,y,n,curve='lin')
-            for i in xrange(n):
-                tmp[i] += mod[i]
-        elif curve=='ppar':
-            n1=int(b*n)
-            n2=n-n1
-            mod = []
-            tmp = crange(x,y,n,curve='lin')
-            if c in [0, 1]: #+
-                mod.extend(list(crange(0,a,n1,curve='par')))
-            else:
-                mod.extend(list(crange(0,a,n1,curve='npar')))
-            if c in [0, 3]: #+
-                mod.extend(list(crange(a,0,n2,curve='par')))
-            else:
-                mod.extend(list(crange(a,0,n2,curve='npar')))
-            for i in xrange(n):
-                tmp[i] += mod[i]
-        elif curve=='psin':
-            tmp = crange(x,y,n,curve='lin')
-            for i in xrange(n):
-                tmp[i] += a*math.sin((i/m)*math.pi*2*c)#**b
-        else:
-            d = y-x
-            tmp = crange(x,y,n,'lin')
-            for i in xrange(n):
-                tmp[i] += (a*((math.cos(math.pi + (i/m)*math.pi*2*c))+1)/2)**b
+        return ValueError('Bad curve type')
     return tmp
 #---end crange
 

@@ -112,11 +112,19 @@ class CP(object):
             time    - Time of the CP. Placeholder currently.
             t, c, b - Spline params. Default to linear.
         """
-        self.val = val
+        self.val = numpy.array(val)
         self.time = time #placeholder - irregular grid not ready
         self.t = t
         self.c = c
         self.b = b
+
+    def get_pad(self, target):
+        """Returns a CP for padding interp with <4 points.
+
+        Arguments:
+            target  - CP's closest neighbor
+        """
+        return CP(self.val - target.val)
 
     def _get_spline(self):
         return self.t, self.c, self.b
@@ -126,29 +134,6 @@ class CP(object):
 
     spline = property(_get_spline, _set_spline, doc="Spline parameters in a list")
 #---end CP
-
-def get_pad(target, neighbor):
-    """Returns a CP for padding interp with <4 points.
-
-    Arguments:
-        target  - CP that's being padded
-        neighbor- CP's closest neighbor
-    """
-    if type(target.val)==int or type(target.val)==float:
-        count = 1
-    else:
-        count = len(target.val)
-
-    if count==1:
-        diff = (target.val-neighbor.val)
-        return CP(target.val+diff)
-    else:
-        val = []
-        for i in xrange(count):
-            diff = (target.val[i]-neighbor.val[i])
-            val.append(target.val[i]-diff)
-        return CP(val)
-#---end get_pad
 
 def get_spline(my_cps, n=50, loop=False, curve='lin', p1=1, p2=0.5, p3=1):
     """Takes list CPs and returns full spline.
@@ -187,8 +172,8 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', p1=1, p2=0.5, p3=1):
         my_cps.append(my_cps[2])
         my_cps.insert(0, my_cps[-1])
     else:
-        pad1 = get_pad(my_cps[0], my_cps[1])
-        pad2 = get_pad(my_cps[-1], my_cps[-2])
+        pad1 = my_cps[0].get_pad(my_cps[1])
+        pad2 = my_cps[-1].get_pad(my_cps[-2])
         vals[0] = pad1.val
         for i in xrange(len(my_cps)):
             vals[i+1] = my_cps[i].val

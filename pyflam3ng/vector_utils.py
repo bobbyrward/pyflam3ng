@@ -23,15 +23,15 @@ def crange(x, y, n, curve='lin', p1=1.0, p2=0.5, p3=1.0):
         lin     - Linear
         par     - Parabolic
         npar    - Negative Parabolic
-        cos     - Half-period Cosine (p1 = slope)
+        sin     - Sinusoidal (p1 = amp (+ and -), p2 = slope, p3 = freq)
+        cos     - Periodic Cosine (p1 = amp (+ only), p2 = slope p3 = freq)
+        hcos    - Half-period Cosine (p1 = slope)
         sinh    - Hyperbolic Sinusoidal (p1 = slope)
         tanh    - Hyperbolic Tangent (p1 = slope)
         exp     - Exponential (p1 = slope)
         plin    - Periodic Linear (p1 = amp, p2 = peak)
         ppar    - Periodic Parabolic (p1 = amp, p2 = peak, p3 = mode)
                     Mode options: 0 = ++, 1 = +-, 2 = --, 3 = -+
-        psin    - Periodic Sinusoidal (p1 = amp (+ and -), p2 = slope, p3 = freq)
-        pcos    - Periodic Cosine (p1 = amp (+ only), p2 = slope p3 = freq)
     """
     if curve in ['plin', 'pcos']:
         if p2 <= 0 or p2 >= 1:
@@ -52,7 +52,16 @@ def crange(x, y, n, curve='lin', p1=1.0, p2=0.5, p3=1.0):
         d = (y-x)/(m**2)
         for i in xrange(n):
             tmp[i] = y-d*((n-i)**2)
+    elif curve=='sin':
+        for i in xrange(n):
+            tmp[i] = p1*math.sin((i/m)*math.pi*2*p3)#**b
+        tmp += crange(x,y,n,curve='lin')
     elif curve=='cos':
+        d = y-x
+        for i in xrange(n):
+            tmp[i] = (p1*((math.cos(math.pi + (i/m)*math.pi*2*p3))+1)/2)**p2
+        tmp += crange(x,y,n,'lin')
+    elif curve=='hcos':
         d = y-x
         for i in xrange(n):
             tmp[i] = (x+d*((math.cos(math.pi + (i/m)*math.pi))+1)/2)**p1
@@ -88,15 +97,6 @@ def crange(x, y, n, curve='lin', p1=1.0, p2=0.5, p3=1.0):
         else:
             tmp[np:] = crange(p1,0,n-np,curve='npar')
         tmp += crange(x,y,n,curve='lin')
-    elif curve=='psin':
-        for i in xrange(n):
-            tmp[i] = p1*math.sin((i/m)*math.pi*2*p3)#**b
-        tmp += crange(x,y,n,curve='lin')
-    elif curve=='pcos':
-        d = y-x
-        for i in xrange(n):
-            tmp[i] = (p1*((math.cos(math.pi + (i/m)*math.pi*2*p3))+1)/2)**p2
-        tmp += crange(x,y,n,'lin')
     else:
         return ValueError('Bad curve type')
     return tmp
@@ -142,7 +142,7 @@ def get_pad(target, neighbor, n):
 
     if count==1:
         diff = (target.val-neighbor.val)*(n/abs(n))
-        return CP(target.val-diff)
+        return CP(target.val+diff)
     else:
         val = []
         for i in xrange(count):
@@ -188,6 +188,7 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', p1=1, p2=0.5, p3=1):
         my_cps.append(my_cps[2])
         my_cps.insert(0, my_cps[-1])
     else:
+        print my_cps
         pad1 = get_pad(my_cps[0], my_cps[1], n)
         pad2 = get_pad(my_cps[-2], my_cps[-1], -n)
         vals[0] = pad1.val
@@ -200,7 +201,6 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', p1=1, p2=0.5, p3=1):
     tmp = numpy.zeros((count, nf), numpy.float32)
     #do segments
     for i in xrange(seg):
-        print 'Segment: %d,' % i
         tcps = my_cps[i:i+4]
         i0, i1 = i*n, (i+1)*n
         for j in xrange(count):
@@ -208,7 +208,6 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', p1=1, p2=0.5, p3=1):
                             curve=curve, p1=p1, p2=p2, p3=p3)
             sp_tmp = sp_tmp.transpose()
             tmp[j][i0:i1] = sp_tmp[j]
-        print
     #---end segments
     return tmp
 #---end get_spline
@@ -225,8 +224,10 @@ def spline(cps, n, splinea=(0, -1, 0), splineb=(0, -1, 0), **kwargs):
     """
     if len(cps) < 4: raise ValueError('Need 4 cps')
 
-    t = crange(0, 1, n, **kwargs)
-
+    t = crange(0, 1, n)
+    curve_mod = crange(0, cps[2]-cps[1], n, **kwargs) - crange(0, cps[2]-cps[1], n)
+    curve_mod.resize(len(curve_mod),1)
+    
     ta, ca, ba = splinea
     tb, cb, bb = splineb
     fa = (1-ta)*(1+ca)*(1+ba)
@@ -243,5 +244,6 @@ def spline(cps, n, splinea=(0, -1, 0), splineb=(0, -1, 0), **kwargs):
     S = numpy.zeros((len(t),4), numpy.float32)
     for i in xrange(len(t)):
         S[i] = [t[i]**3, t[i]**2, t[i], 1]
-    return numpy.dot(S, MxC)
+    result = numpy.dot(S, MxC)
+    return result + curve_mod
 #---end spline

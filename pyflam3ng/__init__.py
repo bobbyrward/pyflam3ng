@@ -504,18 +504,20 @@ class Palette(object):
         self.smooth()
 
 class Xform(object):
-    def __init__(self, xml_node=None):
-        self._weight = 0.0
-        self._color = 0.0
-        self._symmetry = 0.0
-        self._opacity = 1.0
+    def __init__(self, xml_node=None, **kwargs):
+        self._weight = kwargs.get('weight', 0.0)
+        self._color = kwargs.get('color', 0.0)
+        self._symmetry = kwargs.get('symmetry', 0.0)
+        self._opacity = kwargs.get('opacity', 1.0)
         self.animate = 0.0
-        self._x = Point(1.0, 0.0)
-        self._y = Point(0.0, 1.0)
-        self._o = Point(0.0, 0.0)
-        self._px = Point(1.0, 0.0)
-        self._py = Point(0.0, 1.0)
-        self._po = Point(0.0, 0.0)
+        self._x = Point()
+        self._y = Point()
+        self._o = Point()
+        self._px = Point()
+        self._py = Point()
+        self._po = Point()
+        self.coefs = kwargs.get('coefs', [0.0, 1.0, 1.0, 0.0, 0.0, 0.0])
+        self.post = kwargs.get('post', [0.0, 1.0, 1.0, 0.0, 0.0, 0.0])
         #self.coefs = [(x,y for x,y in [self.x, self.y, self.o])] #?
         #self.post = [(x,y for x,y in [self.px, self.py, self.po])]
         self.vars = Variations()
@@ -530,47 +532,47 @@ class Xform(object):
         hole_vars = ['spherical', 'ngon', 'julian', 'juliascope', 'polar'
                     ,'wedge_sph', 'wedge_julia']
         pad = self.copy()
-        pad.coefs = [0, 1, 1, 0, 0, 0]
-        pad.weight = 0
-        pad.symmetry = 1
+        pad.coefs = [0.0, 1.0, 1.0, 0.0, 0.0, 0.0]
+        pad.weight = 0.0
+        pad.symmetry = 1.0
         
         if len(set(pad.vars.values.keys()).intersection(hole_vars)) > 0:
-            pad.coefs = [-1, 0, 0, 1, 0, 0]
-            pad.vars.set_variation('linear', -1)
+            pad.coefs = [-1.0, 0.0, 0.0, -1.0, 0.0, 0.0]
+            pad.vars.set_variation('linear', -1.0)
         if 'rectangles' in pad.vars.values.keys():
-            pad.vars.set_variation('rectangles', 1)
-            pad.vars.set_variable('rectangles', 'x', 0)
-            pad.vars.set_variable('rectangles', 'y', 0)
+            pad.vars.set_variation('rectangles', 1.0)
+            pad.vars.set_variable('rectangles', 'x', 0.0)
+            pad.vars.set_variable('rectangles', 'y', 0.0)
         if 'rings2' in pad.vars.values.keys():
-            pad.vars.set_variation('rings2', 1)
-            pad.vars.set_variable('rings2', 'val', 0)
+            pad.vars.set_variation('rings2', 1.0)
+            pad.vars.set_variable('rings2', 'val', 0.0)
         if 'fan2' in pad.vars.values.keys():
-            pad.vars.set_variation('fan2', 1)
-            pad.vars.set_variable('fan2', 'x', 0)
-            pad.vars.set_variable('fan2', 'y', 0)
+            pad.vars.set_variation('fan2', 1.0)
+            pad.vars.set_variable('fan2', 'x', 0.0)
+            pad.vars.set_variable('fan2', 'y', 0.0)
         if 'blob' in pad.vars.values.keys():
-            pad.vars.set_variation('blob', 1)
-            pad.vars.set_variable('blob', 'low', 1)
-            pad.vars.set_variable('blob', 'high', 1)
-            pad.vars.set_variable('blob', 'waves', 1)
+            pad.vars.set_variation('blob', 1.0)
+            pad.vars.set_variable('blob', 'low', 1.0)
+            pad.vars.set_variable('blob', 'high', 1.0)
+            pad.vars.set_variable('blob', 'waves', 1.0)
         if 'perspective' in pad.vars.values.keys():
-            pad.vars.set_variation('perspective', 1)
-            pad.vars.set_variable('perspective', 'angle' , 0)
+            pad.vars.set_variation('perspective', 1.0)
+            pad.vars.set_variable('perspective', 'angle' , 0.0)
         if 'curl' in pad.vars.values.keys():
-            pad.vars.set_variation('curl', 1)
-            pad.vars.set_variable('curl', 'c1', 0)
-            pad.vars.set_variable('curl', 'c2', 0)
+            pad.vars.set_variation('curl', 1.0)
+            pad.vars.set_variable('curl', 'c1', 0.0)
+            pad.vars.set_variable('curl', 'c2', 0.0)
         if 'super_shape' in pad.vars.values.keys():
-            pad.vars.set_variation('super_shape', 1)
-            pad.vars.set_variable('super_shape', 'n1', 2)
-            pad.vars.set_variable('super_shape', 'n2', 2)
-            pad.vars.set_variable('super_shape', 'n3', 2)
-            pad.vars.set_variable('super_shape', 'rnd', 0)
-            pad.vars.set_variable('super_shape', 'holes', 0)
+            pad.vars.set_variation('super_shape', 1.0)
+            pad.vars.set_variable('super_shape', 'n1', 2.0)
+            pad.vars.set_variable('super_shape', 'n2', 2.0)
+            pad.vars.set_variable('super_shape', 'n3', 2.0)
+            pad.vars.set_variable('super_shape', 'rnd', 0.0)
+            pad.vars.set_variable('super_shape', 'holes', 0.0)
         if 'fan' in pad.vars.values.keys():
-            pad.vars.set_variation('fan', 1)
+            pad.vars.set_variation('fan', 1.0)
         if 'rings' in pad.vars.values.keys():
-            pad.vars.set_variation('rings', 1)
+            pad.vars.set_variation('rings', 1.0)
         #tot = sum(pad.vars.values.values())
         #for v in pad.vars.values: pad.vars.values[v] /= tot
 
@@ -812,6 +814,10 @@ class Genome(object):
     def set_defaults(self):
         self.time = 0.0
 
+        self._finalx = False
+        self._final = Xform()
+        self._final.vars.set_variation('linear', 1.0)
+
         self.palette = Palette()
 
         self.center = numpy.zeros(1, [('x', numpy.float32), ('y', numpy.float32)])
@@ -866,6 +872,27 @@ class Genome(object):
 
         self.xforms = []
 
+    def has_final(self):
+        return self._finalx
+
+    def enable_final(self):
+        self._finalx = True
+
+    def disable_final(self):
+        self._finalx = False
+
+    def _get_final(self):
+        if not self._finalx: return None
+        else:                return self._final
+
+    def _set_final(self, xform):
+        if not xform:
+            self._finalx = False
+        else:
+            self._final = xform
+
+    final = property(_get_final, _set_final,
+             doc='Returns the final xform (None if disabled).')
 
     def _init_from_node(self, flame_node):
         self.flame_node = flame_node

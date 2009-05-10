@@ -445,7 +445,7 @@ class Palette(object):
                 self.array[index] = hls2rgb(h,l,s)
                 index += 1
 
-    def from_seed(self, seed, c_split=0, split=90, dist=64, space='rgb', curve='cos'):
+    def from_seed(self, seed, c_split=0, split=90, dist=64, space='rgb', curve='hcos'):
         c_split /= 360.0
         split /= 360.0
         if space=='rgb':
@@ -473,7 +473,7 @@ class Palette(object):
 
         self.array[:] = tmp[:]
 
-    def from_seeds(self, seeds, space='rgb', curve='cos'):
+    def from_seeds(self, seeds, space='rgb', curve='hcos'):
         ns = len(seeds)
         d = 256/ns
         r = 256%ns

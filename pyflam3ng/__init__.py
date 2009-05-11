@@ -535,7 +535,7 @@ class Xform(object):
         pad.coefs = [0.0, 1.0, 1.0, 0.0, 0.0, 0.0]
         pad.weight = 0.0
         pad.symmetry = 1.0
-        
+
         if len(set(pad.vars.values.keys()).intersection(hole_vars)) > 0:
             pad.coefs = [-1.0, 0.0, 0.0, -1.0, 0.0, 0.0]
             pad.vars.set_variation('linear', -1.0)
@@ -575,7 +575,7 @@ class Xform(object):
             pad.vars.set_variation('rings', 1.0)
         #tot = sum(pad.vars.values.values())
         #for v in pad.vars.values: pad.vars.values[v] /= tot
-        return 
+        return
 
     def rotate_x(self, deg):
         self._x.ang += deg
@@ -890,7 +890,8 @@ class Genome(object):
         attribs = {'brightness': self.brightness, 'contrast': self.contrast
                   ,'gamma': self.gamma, 'vibrancy': self.vibrancy
                   ,'rotate': self.rotate, 'scale': self.pixels_per_unit
-                  ,'symmetry': self.symmetry, 'center': self.center}
+                  ,'symmetry': self.symmetry, 'center': self.center
+                  ,'palette': self.palette.array}
         xattribs = {}
         for i in xrange(len(self.xforms)):
             xattribs.setdefault('xf'+str(i), self.xforms[i].get_attribs())

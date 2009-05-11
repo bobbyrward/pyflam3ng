@@ -23,6 +23,7 @@ class Interpo(object):
         self.scale = None
         self.symmetry = None
         self.center = None
+        self.palette = None
         self.xforms = []
         self.times = []
         self.genomes = []
@@ -53,6 +54,11 @@ class Interpo(object):
         tmp_sca = self.scale.calculate()
         tmp_cen = self.center.calculate()
         tmp_xfs = []
+        tmp_pal = numpy.zeros((self._length, 256, 3), numpy.uint8)
+        for i in xrange(256):
+            #calculate each palette index
+            #put into matrix like this: [:,i,:]
+            tmp_pal[:,i,:] = self.palette[i].calculate().transpose()
         for xf in self.xforms:
             xf_buff = {'weight': xf.weight.calculate()
                       ,'color': xf.color.calculate()
@@ -80,6 +86,7 @@ class Interpo(object):
             g.rotate = tmp_rot[0][i]
             g.pixels_per_unit = tmp_sca[0][i]
             g.center.fill(tuple(tmp_cen[:,i]))
+            g.palette = tmp_pal[i]
             for j, xf in enumerate(tmp_xfs):
                 if xf['weight'][0][i] > 0.0:
                 #if weight not 0, otherwise you can ignore
@@ -153,6 +160,7 @@ class Interpo(object):
         tmp_sca = []
         tmp_sym = []
         tmp_cen = []
+        tmp_pal = numpy.zeros((256, len(self.genomes)), CP)
         #check for pads
         for i in xrange(len(self.genomes)-1):
             self.genomes[i], self.genomes[i+1] = check_for_pad(self.genomes[i], self.genomes[i+1])
@@ -182,6 +190,8 @@ class Interpo(object):
             tmp_sca.append(CP(attrs['scale'], self.times[t]))
             tmp_sym.append(CP(attrs['symmetry'], self.times[t]))
             tmp_cen.append(CP(center, self.times[t]))
+            for i in xrange(256):
+                tmp_pal[i][t] = CP(attrs['palette'][i], self.times[t])
             #go through all xforms at index and get the variants used
             for i, xf in enumerate(self.xforms):
                 xf_attrs = g.xforms[i].get_attribs()
@@ -230,6 +240,10 @@ class Interpo(object):
         self.scale = Spline(tmp_sca, self._looping)
         self.symmetry = Spline(tmp_sym, self._looping)
         self.center = Spline(tmp_cen, self._looping)
+        self.palette = []
+        print len(tmp_pal[0])
+        for i in xrange(256):
+            self.palette.append(Spline(tmp_pal[i], self._looping))
         for xf in self.xforms:
             xf.weight = Spline(xf.weight_b, self._looping)
             xf.color = Spline(xf.color_b, self._looping)

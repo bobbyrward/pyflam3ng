@@ -21,11 +21,13 @@ class Xform(object):
     def __init__(self, frame, xid, attrs):
         self.id = xid
         self.cps = {}
-        self.coefs = {}
+        self.points = {}
         self.vars = {}
         for key, value in attrs.items():
             if key in ['o', 'x', 'y']:
-                self.coefs.setdefault(key, CP(value, frame.time))
+                self.points.setdefault(key, CP(value, frame.time))
+            elif key in ['po', 'px', 'py']:
+                self.points.setdefault(key, CP(value, frame.time))
             elif key=='vars':
                 for variant, vweight in value.items():
                     variant_vals = {variant: vweight}
@@ -97,6 +99,7 @@ class Interpo(object):
         self.looping = kwargs.get('looping', defaults['looping'])
         self.curve = kwargs.get('curve', defaults['curve'])
         self.spline = kwargs.get('spline', defaults['spline'])
+        self.p_space = kwargs.get('p_space', defaults['p_space'])
         if keyframes and genomes:
             raise ValueError('can only have keyframes or genomes, not both')
         if keyframes:
@@ -166,7 +169,8 @@ class Interpo(object):
                         if i < len(k._xforms):
                             for var in variants_used:
                                 if var in k._xforms[i].vars.keys():
-                                    
+                            for pt, ptval in k._xforms[i].points:
+                                
                                     
                         #go through union of variants, in nothing use 0s for defaults
 

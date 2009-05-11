@@ -575,7 +575,7 @@ class Xform(object):
             pad.vars.set_variation('rings', 1.0)
         #tot = sum(pad.vars.values.values())
         #for v in pad.vars.values: pad.vars.values[v] /= tot
-        return pad
+        return 
 
     def rotate_x(self, deg):
         self._x.ang += deg
@@ -813,7 +813,7 @@ class Xform(object):
 #---end Xform
 
 class Genome(object):
-    def __init__(self, flame_node=None, genome_handle=None):
+    def __init__(self, random=True, flame_node=None, genome_handle=None):
         self.set_defaults()
 
         if flame_node is not None:
@@ -822,7 +822,7 @@ class Genome(object):
             self._init_from_handle(genome_handle)
         else:
             self.genome_handle = flam3.GenomeHandle()
-            self.random()
+            if random: self.random()
 
     def set_defaults(self):
         self.time = 0.0

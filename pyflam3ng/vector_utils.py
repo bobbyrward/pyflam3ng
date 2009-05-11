@@ -200,8 +200,8 @@ class Vect(object):
     end = property(_get_end, _set_end)
 
 class Spline():
-    def __init__(self, cps=None, loop=False):
-        if not cps:
+    def __init__(self, cps=None, loop=False, time=50):
+        if cps==None:
             self._cps = []
             self._vects = []
             self._length = 0
@@ -211,7 +211,7 @@ class Spline():
             if isinstance(cps[0], CP):
                 self._cps = cps
             else:
-                self._cps = get_cps_from_list(cps)
+                self._cps = get_cps_from_list(cps, time)
             self._looping = loop
             if len(self._cps)>1:
                 self._vects = self.setup_vects()
@@ -341,12 +341,9 @@ class Spline():
             i1 = self._vects[i].end.time
             tcps = [self._vects[i-1].start, self._vects[i].start
                    ,self._vects[i].end, self._vects[i+1].end]
-            for j in tcps: print j.val,
-            print i0, i1
             vals = numpy.zeros((4, self._count), numpy.float32)
             for j in xrange(4):
                 vals[j] = tcps[j].val
-            print vals
             for j in xrange(self._count):
                 tmp[j][i0:i1] = spline(vals[:,j], self._vects[i].length
                                       ,self._vects[i].start.spline
@@ -357,7 +354,7 @@ class Spline():
     def setup_vects(self):
         if len(self._cps) < 2:
             raise ValueError('need more cps first')
-        cps = self._cps[:]
+        cps = list(self._cps[:])
         if self._looping:
             seg = len(cps)
             cps.insert(0, cps[-1])
@@ -388,6 +385,11 @@ class Spline():
         self.update()
 
     cps = property(_get_cps, _set_cps)
+
+    def _get_length(self):
+        return self._length
+
+    length = property(_get_length)
         
 
 def get_cps_from_list(lst, time=50):
@@ -416,7 +418,7 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', p1=1, p2=0.5, p3=1):
     if type(my_cps[0].val)==int or type(my_cps[0])==float:
         count = 1
     else:
-        count = len(my_cps[0].val)
+        count = my_cps[0].val.size
 
     vals = numpy.zeros((seg+3, count), numpy.float32)
 

@@ -87,6 +87,9 @@ class Keyframe(object):
                 for xid, xattr in value.items():
                     self._xforms.append(Xform(self, xid, xattr))
                 tmp_cps.setdefault(key, self._xforms)
+            elif key=='center':
+                val = numpy.array(list(value[0].tolist()))
+                tmp_cps.setdefault(key, CP(val, self._time))
             else:
                 tmp_cps.setdefault(key, CP(value, self._time))
         self._cps = tmp_cps.copy()
@@ -154,6 +157,7 @@ class Interpo(object):
         #Get CPs for splines
         #first get frame attribs
         cplist = {}
+        xflist = {}
         for count, frame in enumerate(self._keyframes):
             for key, value in frame.cps.items():
                 if key <> 'xforms':
@@ -163,25 +167,27 @@ class Interpo(object):
                         cplist.setdefault(key, tmp)
                     else:
                         cplist[key][count] = value
-                else:
+                #else:
                     #go through maxx, if nothing there use 0s for defaults
-                    for i in xrange(maxx):
-                        if i < len(k._xforms):
-                            for var in variants_used:
-                                if var in k._xforms[i].vars.keys():
-                            for pt, ptval in k._xforms[i].points:
-                                
+                    #for i in xrange(maxx):
+                        #if count == 0:
+                            #width = 
+                            #tmp = numpy.zeros((, len(self._keyframes)), CP)
+                        #if i < len(k._xforms):
+                            #for var in variants_used:
+                                #if var in k._xforms[i].vars.keys():
+                            #for pt, ptval in k._xforms[i].points:
+                                #if self.p_space == 'polar':
+                                    #get len, ang
+                                #else:
+                                    #get x, y
                                     
-                        #go through union of variants, in nothing use 0s for defaults
-
                     #for xf, cps in value.items():
-        return cplist
         #make spline dict
-        #for 
-
-        #go through maxx, if nothing there use 0s for defaults
-            #go through union of variants, in nothing use 0s for defaults
-        pass
+        for key, vals in cplist.items():
+            if key <> 'xforms':
+                print key
+                self.splines.setdefault(key, Spline(vals, self.looping, self.curve, self.spline))
 
     def _get_length(self):
         return self._length

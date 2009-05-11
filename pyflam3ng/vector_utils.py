@@ -115,7 +115,10 @@ class CP(object):
             time    - Time of the CP. Placeholder currently.
             t, c, b - Spline params. Default to linear.
         """
-        self.val = numpy.array(val, numpy.float32)
+        if isinstance(val, numpy.ndarray):
+            self.val = val
+        else:
+            self.val = numpy.array(val, numpy.float32)
         self.time = time #placeholder - irregular grid not ready
         self.t = t
         self.c = c

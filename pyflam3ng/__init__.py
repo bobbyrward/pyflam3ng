@@ -575,6 +575,7 @@ class Xform(object):
             pad.vars.set_variation('rings', 1.0)
         #tot = sum(pad.vars.values.values())
         #for v in pad.vars.values: pad.vars.values[v] /= tot
+        return pad
 
     def rotate_x(self, deg):
         self._x.ang += deg
@@ -752,6 +753,18 @@ class Xform(object):
 
     post = property(_get_post, _set_post)
 
+    """This is for interpo for now"""
+    def get_attribs(self):
+        attribs = {'x': self.x, 'y': self.y, 'o': self.o
+                  ,'weight': self.weight, 'color': self.color
+                  ,'symmetry': self.symmetry, 'opacity': self.opacity
+                  ,'vars': self.vars.values, 'variables': self.vars.variables}
+        if self.post <> [0, 1, 1, 0, 0, 0]:
+            attribs.setdefault('px', self.px)
+            attribs.setdefault('py', self.py)
+            attribs.setdefault('po', self.po)
+        return attribs
+
     def _load_xml(self, xform_node):
         def scalar_attrib(src_name, dest_name=None, coerce_type=float, node=xform_node):
             if src_name in node.attrib:
@@ -871,6 +884,18 @@ class Genome(object):
         self.palette_mode = flam3.flam3_palette_mode_step
 
         self.xforms = []
+
+    """This is for interpo for now"""
+    def get_attribs(self):
+        attribs = {'brightness': self.brightness, 'contrast': self.contrast
+                  ,'gamma': self.gamma, 'vibrancy': self.vibrancy
+                  ,'rotate': self.rotate, 'scale': self.pixels_per_unit
+                  ,'symmetry': self.symmetry, 'center': self.center}
+        xattribs = {}
+        for i in xrange(len(self.xforms)):
+            xattribs.setdefault('xf'+str(i), self.xforms[i].get_attribs())
+        attribs.setdefault('xforms', xattribs)
+        return attribs
 
     def has_final(self):
         return self._finalx

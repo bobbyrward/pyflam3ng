@@ -120,9 +120,9 @@ class CP(object):
         else:
             self.val = numpy.array(val, numpy.float32)
         self.time = time #placeholder - irregular grid not ready
-        self.t = t
-        self.c = c
-        self.b = b
+        self.ti, self.to = t,t
+        self.ci, self.co = c,c
+        self.bi, self.bo = b,b
 
     def get_pad(self, target):
         """Returns a CP for padding interp with <4 points.
@@ -135,12 +135,29 @@ class CP(object):
         return CP(self.val-dv, self.time-dt)
 
     def _get_spline(self):
-        return self.t, self.c, self.b
+        return self.ti, self.ci, self.bi
 
     def _set_spline(self, params):
-        self.t, self.c, self.b = params
+        self.ti, self.ci, self.bi = params
+        self.to, self.co, self.bo = params
 
     spline = property(_get_spline, _set_spline, doc="Spline parameters in a list")
+
+    def _get_spline_in(self):
+        return self.ti, self.ci, self.bi
+
+    def _set_spline_in(self, params):
+        self.ti, self.ci, self.bi = params
+
+    spline_in = property(_get_spline_in, _set_spline_in)
+
+    def _get_spline_out(self):
+        return self.to, self.co, self.bo
+
+    def _set_spline_out(self, params):
+        self.to, self.co, self.bo = params
+
+    spline_out = property(_get_spline_out, _set_spline_out)
 #---end CP
 
 class Vect(object):
@@ -346,10 +363,10 @@ class Spline():
                 vals[j] = tcps[j].val
             for j in xrange(self._count):
                 tmp[j][i0:i1] = spline(vals[:,j], self._vects[i].length
-                                      ,self._vects[i].start.spline
-                                      ,self._vects[i].end.spline
+                                      ,self._vects[i].start.spline_out
+                                      ,self._vects[i].end.spline_in
                                       ,**self._vects[i].curve)
-        return tmp        
+        return tmp
 
     def setup_vects(self):
         if len(self._cps) < 2:
@@ -390,7 +407,7 @@ class Spline():
         return self._length
 
     length = property(_get_length)
-        
+
 
 def get_cps_from_list(lst, time=50):
     tmp = []
@@ -451,7 +468,7 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', p1=1, p2=0.5, p3=1):
         i0, i1 = i*n, (i+1)*n
         for j in xrange(count):
             tvals = vals[i:i+4, j]
-            sp_tmp = spline(tvals, n, tcps[1].spline, tcps[2].spline,
+            sp_tmp = spline(tvals, n, tcps[1].spline_in, tcps[2].spline_out,
                             curve=curve, p1=p1, p2=p2, p3=p3)
             tmp[j][i0:i1] = sp_tmp
     #---end segments
@@ -472,7 +489,7 @@ def spline(cps, n, splinea=(0, -1, 0), splineb=(0, -1, 0), **kwargs):
 
     t = crange(0, 1, n)
     curve_mod = crange(0, cps[2]-cps[1], n, **kwargs) - crange(0, cps[2]-cps[1], n)
-    
+
     ta, ca, ba = splinea
     tb, cb, bb = splineb
     fa = (1-ta)*(1+ca)*(1+ba)

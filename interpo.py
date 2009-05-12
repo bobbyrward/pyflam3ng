@@ -42,8 +42,6 @@ class Interpo(object):
 
     def build_frames(self):
         self._frames = []
-        for i in xrange(self._length):
-            self._frames.append(Genome(False))
         #calculate splines
         tmp_bri = self.brightness.calculate()
         tmp_con = self.contrast.calculate()
@@ -77,7 +75,8 @@ class Interpo(object):
             tmp_xfs.append(xf_buff)
         #---end spline calc
         #frame create
-        for i, g in enumerate(self._frames):
+        for i in xrange(self._length):
+            g = Genome(False)
             g.brightness = tmp_bri[0][i]
             g.contrast = tmp_con[0][i]
             g.gamma = tmp_gam[0][i]
@@ -106,6 +105,7 @@ class Interpo(object):
                                     g.xforms[-1].vars.set_variable(var, varib, value[0][i])
                     #---end variants
             #---end xforms
+            self._frames.append(g)
         #---end frame create
 
     def _get_frames(self):

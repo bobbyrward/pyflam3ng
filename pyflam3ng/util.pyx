@@ -153,41 +153,43 @@ def cdiff(float d, float i, int curve=0, float amp=0, int freq=1, float slope=1,
     elif curve==4:
         val = (np.tanh((2*i-1)*slope) + np.tanh(slope))/(2*np.tanh(slope))/d
     elif curve==5:
-        val = d * ((1+np.exp(slope*i))/(1+np.exp(slope)))
+        val = d * ((1-np.exp(-slope*i))/(1-np.exp(-slope)))
     elif curve==6:
-        val = (0.5*amp*(np.cos(2*freq*i*np.pi)+np.pi))**slope + i*d
+        if freq<=0:
+            raise ValueError('Frequency much be positive non-zero')
+        val = (0.5*amp*(np.cos(2*freq*i*np.pi + np.pi)+1))**slope + i*d
     elif curve==7:
         if freq<=0:
             raise ValueError('Frequency must be positive non-zero')
         val = amp*np.sin(i*np.pi*2*freq) + i*d
-        val = val**slope * np.sign(val)
+        if np.sign(val**slope) <> np.sign(val):
+            val = val**slope * np.sign(val)
+        else:
+            val = val**slope
     elif curve==8:
         if peak <= 0.0 or peak >= 1.0:
             raise ValueError('peak need to be 0-1')
-        if   i < peak: val = (i/peak)*d
-        elif i > peak: val = (i/(1-peak))*d
-        else:          val = d
+        if  i <= peak: val = i * (amp/peak)
+        elif i > peak: val = (1-i)*(amp/(1-peak))
+        val += i*d
     elif curve==9:
         if peak <= 0.0 or peak >= 1.0:
             raise ValueError('peak need to be 0-1')
         if mode < 0 or mode > 3:
             raise ValueError('invalid mode')
         elif mode==0:
-            if   i < peak: val = d * (1-(1-(i/peak))**2)
-            elif i > peak: val = d * (1-(1-(i/(1-peak)))**2)
-            else:          val = d
+            if  i <= peak: val = amp * (1-(1-(i/peak))**2)
+            elif i > peak: val = amp * (1-(1-((1-i)/(1-peak)))**2)
         elif mode==1:
-            if   i < peak: val = d * (1-(1-(i/peak))**2)
-            elif i > peak: val = d * (i/(1-peak))**2
-            else:          val = d
+            if  i <= peak: val = amp * (1-(1-(i/peak))**2)
+            elif i > peak: val = amp * ((1-i)/(1-peak))**2
         elif mode==2:
-            if   i < peak: val = d * (i/peak)**2
-            elif i > peak: val = d * (1-(1-(i/(1-peak)))**2)
-            else:          val = d
+            if  i <= peak: val = amp * (i/peak)**2
+            elif i > peak: val = amp * (1-(1-((1-i)/(1-peak)))**2)
         elif mode==3:
-            if   i < peak: val = d * (i/peak)**2
-            elif i > peak: val = d * (i/(1-peak))**2
-            else: val = d
+            if  i <= peak: val = amp * (i/peak)**2
+            elif i > peak: val = amp * ((1-i)/(1-peak))**2
+        val += i*d
     else:
         raise ValueError('invalid curve')
 

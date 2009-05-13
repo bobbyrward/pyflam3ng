@@ -193,10 +193,8 @@ class Vect(object):
 
     curve = property(_get_curve, _set_curve)
 
-    def _get_length(self):
+    def __len__(self):
         return self._length
-
-    length = property(_get_length)
 
     def _get_start(self):
         return self.cps[0]

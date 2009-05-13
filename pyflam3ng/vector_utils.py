@@ -6,104 +6,11 @@ periodic vectors that start and end at the same point, and smoothed TCB splines
 for animation and interpolation.
 """
 
-import numpy, math
+import numpy, math, copy
+from util import spline
 
-valid_curves = ['lin', 'par', 'npar', 'sin', 'cos', 'hcos', 'sinh', 'tanh'
-               ,'exp', 'plin', 'ppar']
-
-
-def crange(x, y, n, curve='lin', p1=1.0, p2=0.5, p3=1.0):
-    """Generates a curved range between x and y with n points.
-
-    Arguments:
-        x       - Starting value
-        y       - Ending value
-        n       - Number of steps from x to y
-        curve   - Curve of the line
-        p1, 2, 3- Curve params
-
-    Curve options are:
-        lin     - Linear
-        par     - Parabolic
-        npar    - Negative Parabolic
-        sin     - Sinusoidal (p1 = amp (+ and -), p2 = slope, p3 = freq)
-        cos     - Periodic Cosine (p1 = amp (+ only), p2 = slope p3 = freq)
-        hcos    - Half-period Cosine (p1 = slope)
-        sinh    - Hyperbolic Sinusoidal (p1 = slope)
-        tanh    - Hyperbolic Tangent (p1 = slope)
-        exp     - Exponential (p1 = slope)
-        plin    - Periodic Linear (p1 = amp, p2 = peak)
-        ppar    - Periodic Parabolic (p1 = amp, p2 = peak, p3 = mode)
-                    Mode options: 0 = ++, 1 = +-, 2 = --, 3 = -+
-    """
-    if curve in ['plin', 'pcos']:
-        if p2 <= 0 or p2 >= 1:
-            raise ValueError('peak setting out of bounds (must be')
-
-    m = float(n)
-    tmp = numpy.zeros(n, numpy.float32)
-
-    if   curve=='lin':
-        d = (y-x)/m
-        for i in xrange(n):
-            tmp[i] = x+d*i
-    elif curve=='par':
-        d = (y-x)/(m**2)
-        for i in xrange(n):
-            tmp[i] = x+d*(i**2)
-    elif curve=='npar':
-        d = (y-x)/(m**2)
-        for i in xrange(n):
-            tmp[i] = y-d*((n-i)**2)
-    elif curve=='sin':
-        for i in xrange(n):
-            tmp[i] = p1*math.sin((i/m)*math.pi*2*p3)#**b
-        tmp += crange(x,y,n,curve='lin')
-    elif curve=='cos':
-        d = y-x
-        for i in xrange(n):
-            tmp[i] = (p1*((math.cos(math.pi + (i/m)*math.pi*2*p3))+1)/2)**p2
-        tmp += crange(x,y,n,'lin')
-    elif curve=='hcos':
-        d = y-x
-        for i in xrange(n):
-            tmp[i] = (x+d*((math.cos(math.pi + (i/m)*math.pi))+1)/2)**p1
-    elif curve=='sinh':
-        d = y-x
-        tmp[0] = x
-        for i in xrange(1,n):
-            tmp[i] = x+((math.sinh(p1*(2*i-m)/m)-math.sinh(-p1))/
-                        (2*math.sinh(p1*(2*n-m)/m)/d))
-    elif curve=='tanh':
-        d = y-x
-        tmp[0] = x
-        for i in xrange(1,n):
-            tmp[i] = x+((math.tanh(p1*(2*i-m)/m)-math.tanh(-p1))/
-                        (2*math.tanh(p1*(2*n-m)/m)/d))
-    elif curve=='exp':
-        d = y-x
-        for i in xrange(n):
-            tmp[i] = d*(1-math.exp(-p1*(i/m)))/(1-math.exp(-p1))
-    elif curve=='plin':
-        np=int(p2*n)
-        tmp[:np] = crange(0,p1,np,curve='lin')
-        tmp[np:] = crange(p1,0,n-np,curve='lin')
-        tmp += crange(x,y,n,curve='lin')
-    elif curve=='ppar':
-        np=int(p2*n)
-        if p3 in [0, 1]: #+
-            tmp[:np] = crange(0,p1,np,curve='par')
-        else:
-            tmp[:np] = crange(0,p1,np,curve='npar')
-        if p3 in [0, 3]: #+
-            tmp[np:] = crange(p1,0,n-np,curve='par')
-        else:
-            tmp[np:] = crange(p1,0,n-np,curve='npar')
-        tmp += crange(x,y,n,curve='lin')
-    else:
-        return ValueError('Bad curve type')
-    return tmp
-#---end crange
+valid_curves = ['lin', 'par', 'npar', 'sin', 'cos', 'hcos', 'sinh', 'tanh',
+                'exp', 'plin', 'ppar']
 
 class CP(object):
     """Helper object for spline interpo."""
@@ -161,35 +68,37 @@ class CP(object):
 #---end CP
 
 class Vect(object):
-    def __init__(self, cp0, cp1, curve='lin', p1=1, p2=0.5, p3=1):
+    def __init__(self, cp0, cp1, curve='lin', amp=0, freq=1, slope=1,
+                 peak=0.5, mode=0):
+
         self.cps = [cp0, cp1]
         self._length = cp1.time - cp0.time
         self._curve = curve
-        self.p1, self.p2, self.p3 = p1, p2, p3
+        self.amp, self.freq, self.slope = amp, freq, slope
+        self.peak, self.mode = peak, mode
 
     def update(self):
         self._length = self.cps[1].time - self.cps[0].time
 
     def _get_curve(self):
-        return {'curve': self._curve, 'p1': self.p1, 'p2': self.p2, 'p3': self.p3}
+        return self._curve, self.amp, self.freq, self.slope, self.peak, self.mode
 
-    def _set_curve(self, curve, **kwargs):
-        p1 = kwargs.get('p1', 1)
-        p2 = kwargs.get('p2', 0.5)
-        p3 = kwargs.get('p3', 1)
+    def _set_curve(self, curve, amp=0, freq=1, slope=1, peak=0.5, mode=0):
         if curve not in valid_curves:
             raise ValueError('Bad curve value')
         else:
-            if curve in ['plin', 'ppar'] and (p2 <= 0 or p2 >= 1):
+            if curve in ['plin', 'ppar'] and (peak <= 0 or peak >= 1):
                 raise ValueError('peak val must be between 0 and 1')
             elif curve=='ppar' and mode not in [0, 1, 2, 3]:
                 raise ValueError('mode must be 0, 1, 2, or 3')
-            elif curve in ['sin', 'cos'] and (p3 <= 0 or type(p3)<>int):
+            elif curve in ['sin', 'cos'] and (freq <= 0 or type(freq)<>int):
                 raise ValueError('freq must be positive integer')
             self._curve = curve
-            self.p1 = p1
-            self.p2 = p2
-            self.p3 = p3
+            self.amp = amp
+            self.freq = freq
+            self.slope = slope
+            self.peak = peak
+            self.mode = mode
 
     curve = property(_get_curve, _set_curve)
 
@@ -222,7 +131,9 @@ class Spline():
             self._length = 0
             self._count = 0
             self._looping = loop
+            self._nframes = time
         else:
+            self._nframes = time
             if isinstance(cps[0], CP):
                 self._cps = cps
             else:
@@ -231,7 +142,7 @@ class Spline():
             if len(self._cps)>1:
                 self._vects = self.setup_vects()
                 if self._looping:
-                    self._length = self._cps[-1].time
+                    self._length = self._cps[-1].time + time
                 else:
                     self._length = self._cps[-1].time
             self._count = self._cps[0].val.size
@@ -246,17 +157,17 @@ class Spline():
         else:
             raise ValueError('index oob')
 
-    def set_all_curves(self, curve, p1=1, p2=0.5, p3=1):
+    def set_all_curves(self, curve, amp=0, freq=1, slope=1, peak=0.5, mode=0):
         if curve in valid_curves:
             for v in self._vects[1:-1]:
-                v.curve = curve, p1, p2, p3
+                v.curve = curve, amp, freq, slope, peak, mode
         else:
             raise ValueError('invalid curve type')
 
-    def set_curve(self, curve, p1=1, p2=0.5, p3=1):
+    def set_curve(self, curve, amp=0, freq=1, slope=1, peak=0.5, mode=0):
         if 0 < index < len(self._vects)-1:
             if curve in valid_curves:
-                v[index].curve = curve, p1, p2, p3
+                v[index].curve = curve, amp, freq, slope, peak, mode
             else:
                 raise ValueError('invalid curve type')
         elif index==0 or index==len(self._vects)-1:
@@ -357,13 +268,29 @@ class Spline():
             tcps = [self._vects[i-1].start, self._vects[i].start
                    ,self._vects[i].end, self._vects[i+1].end]
             vals = numpy.zeros((4, self._count), numpy.float32)
+            times = numpy.zeros(4, numpy.int32)
+            ti, ci, bi = self._vects[i].start.spline_out
+            to, co, bo = self._vects[i].end.spline_in
+            curve, amp, freq, slope, peak, mode = self._vects[i].curve
+            if   curve=='lin':  curve=-1
+            elif curve=='par':  curve=0
+            elif curve=='npar': curve=1
+            elif curve=='hcos': curve=2
+            elif curve=='sinh': curve=3
+            elif curve=='tanh': curve=4
+            elif curve=='exp':  curve=5
+            elif curve=='cos':  curve=6
+            elif curve=='sin':  curve=7
+            elif curve=='plin': curve=8
+            elif curve=='ppar': curve=9
+            else: raise ValueError('no such curve')
+
             for j in xrange(4):
                 vals[j] = tcps[j].val
+                times[j] = tcps[j].time
             for j in xrange(self._count):
-                tmp[j][i0:i1] = spline(vals[:,j], self._vects[i].length
-                                      ,self._vects[i].start.spline_out
-                                      ,self._vects[i].end.spline_in
-                                      ,**self._vects[i].curve)
+                tmp[j][i0:i1] = spline(vals[:,j], times, ti, ci, bi, to, co, bo
+                                      ,curve, amp, freq, slope, peak, mode)
         return tmp
 
     def setup_vects(self):
@@ -372,9 +299,12 @@ class Spline():
         cps = list(self._cps[:])
         if self._looping:
             seg = len(cps)
-            cps.insert(0, cps[-1])
-            cps.append(cps[1])
+            cps.insert(0, copy.deepcopy(cps[-1]))
+            cps[0].time = cps[1].time - self._nframes
+            cps.append(copy.deepcopy(cps[1]))
+            cps[-1].time = cps[-2].time + self._nframes
             cps.append(cps[2])
+            cps[-1].time = cps[-2].time + self._nframes
         else:
             seg = len(cps)-1
             cps.insert(0, cps[0].get_pad(cps[1]))
@@ -401,11 +331,8 @@ class Spline():
 
     cps = property(_get_cps, _set_cps)
 
-    def _get_length(self):
+    def __len__(self):
         return self._length
-
-    length = property(_get_length)
-
 
 def get_cps_from_list(lst, time=50):
     tmp = []
@@ -413,14 +340,15 @@ def get_cps_from_list(lst, time=50):
         tmp.append(CP(lst[i], i*time))
     return tmp
 
-def get_spline(my_cps, n=50, loop=False, curve='lin', p1=1, p2=0.5, p3=1):
+def get_spline(my_cps, n=50, loop=False, curve='lin', amp=0, freq=1, slope=1,
+               peak=0.5, mode=0):
     """Takes list CPs and returns full spline.
 
     Arguments:
         my_cps  - List of CP objects. All vals must have same dimensions.
         loop    - Does the animation loop?
         curve   - Curve shape. This will eventually be done per-segment.
-        a, b, c - Curve params.
+        amp, freq, mode,  - Curve params.
     """
     if len(my_cps)<2:
         raise ValueError('Need 2 or more CPs')
@@ -428,24 +356,41 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', p1=1, p2=0.5, p3=1):
     #Segments is the number of interps to do, 1 less than #cps when not looping
     if loop: seg = len(my_cps)
     else:    seg = len(my_cps)-1
-    nf = seg * n
 
     if type(my_cps[0].val)==int or type(my_cps[0])==float:
         count = 1
     else:
         count = my_cps[0].val.size
 
-    vals = numpy.zeros((seg+3, count), numpy.float32)
+    vals = numpy.zeros((seg+3, count), dtype=numpy.float32)
+    times = numpy.zeros(seg+3, dtype=numpy.int32)
+
+    if   curve=='lin':  curve=-1
+    elif curve=='par':  curve=0
+    elif curve=='npar': curve=1
+    elif curve=='hcos': curve=2
+    elif curve=='sinh': curve=3
+    elif curve=='tanh': curve=4
+    elif curve=='exp':  curve=5
+    elif curve=='cos':  curve=6
+    elif curve=='sin':  curve=7
+    elif curve=='plin': curve=8
+    elif curve=='ppar': curve=9
+    else: raise ValueError('no such curve')
 
     #examples with [0, 1, 2, 3] - remember n-1, n, n+1, n+2 for spline
     #  looping - (3,) 0, 1, 2, 3, 0, (1) (not interped, just used for spline)
     #  not - (pad0,) 0, 1, 2, 3, (pad3) (not interped)
     if loop:
         vals[0] = my_cps[-1].val
+        times[0] = my_cps[0].time-n
         for i in xrange(len(my_cps)):
             vals[i+1] = my_cps[i].val
+            times[i+1] = my_cps[i].time
         vals[-2] = my_cps[0].val
+        times[-2] = my_cps[-3].time+n
         vals[-1] = my_cps[1].val
+        times[-1] = my_cps[-3].time+2*n
         my_cps.insert(0, my_cps[-1])
         my_cps.append(my_cps[1])
         my_cps.append(my_cps[2])
@@ -453,56 +398,26 @@ def get_spline(my_cps, n=50, loop=False, curve='lin', p1=1, p2=0.5, p3=1):
         pad1 = my_cps[0].get_pad(my_cps[1])
         pad2 = my_cps[-1].get_pad(my_cps[-2])
         vals[0] = pad1.val
+        times[0] = pad1.time
         for i in xrange(len(my_cps)):
             vals[i+1] = my_cps[i].val
+            times[i+1] = my_cps[i].val
         vals[-1] = pad2.val
+        vals[-1] = pad2.time
         my_cps.insert(0, pad1)
         my_cps.append(pad2)
+    nf = times[-2]
 
-    tmp = numpy.zeros((count, nf), numpy.float32)
+    tmp = numpy.zeros((count, nf), dtype=numpy.float32)
     #do segments
     for i in xrange(seg):
         tcps = my_cps[i:i+4]
         i0, i1 = i*n, (i+1)*n
         for j in xrange(count):
-            tvals = vals[i:i+4, j]
-            sp_tmp = spline(tvals, n, tcps[1].spline_in, tcps[2].spline_out,
-                            curve=curve, p1=p1, p2=p2, p3=p3)
+            ti, ci, bi, to, co, bo = tcps[1].spline_in, tcps[2].spline_out
+            sp_tmp = spline(vals[i:i+4,j], times[i:i+4], ti, ci, bi, to, co, bo,
+                            curve, amp, freq, slope, peak, mode)
             tmp[j][i0:i1] = sp_tmp
     #---end segments
     return tmp
 #---end get_spline
-
-def spline(cps, n, splinea=(0, -1, 0), splineb=(0, -1, 0), **kwargs):
-    """Generates a smoothed spline from a list of 4 control points.
-
-    Arguments:
-        cps     - List of 4 points to be smoothed (1D only)
-        n       - Number of points to interp
-        splinea - TCB spline parameters for first interp point
-        splineb - TCB spline parameters for second interp point
-        kwargs  - Curve information for timeline curve (curve, a, b, c)
-    """
-    if len(cps) < 4: raise ValueError('Need 4 cps')
-
-    t = crange(0, 1, n)
-    curve_mod = crange(0, cps[2]-cps[1], n, **kwargs) - crange(0, cps[2]-cps[1], n)
-
-    ta, ca, ba = splinea
-    tb, cb, bb = splineb
-    fa = (1-ta)*(1+ca)*(1+ba)
-    fb = (1-ta)*(1-ca)*(1-ba)
-    fc = (1-tb)*(1-cb)*(1+bb)
-    fd = (1-tb)*(1+cb)*(1-bb)
-
-    M = numpy.array([[-fa,4+fa-fb-fc,-4+fb+fc-fd,fd]
-                    ,[2*fa,-6-2*fa+2*fb+fc,6-2*fb-fc+fd,-fd]
-                    ,[-fa,fa-fb,fb,0]
-                    ,[0,2,0,0]], numpy.float32)/2.0
-    MxC = numpy.dot(M,cps)
-    S = numpy.zeros((len(t),4), numpy.float32)
-    for i in xrange(len(t)):
-        S[i] = [t[i]**3, t[i]**2, t[i], 1]
-    result = numpy.dot(S, MxC)
-    return result + curve_mod
-#---end spline

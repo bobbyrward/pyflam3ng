@@ -135,7 +135,7 @@ Curve types:
 """
 
 def cdiff(float d, float i, int curve=0, float amp=0, int freq=1, float slope=1,
-          int mode=0, float peak=0.5):
+          float peak=0.5, int mode=0):
     cdef float val
 
     if i==0: return 0

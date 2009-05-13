@@ -121,7 +121,7 @@ def spline(np.ndarray[ndim=1, dtype=np.float32_t] cps,
         tano *= (dt2-dt1)/(dt2+dt1)
 
         results[step] = h00*cps[1] + h01*cps[2] + h10*tani + h11*tano
-        if curve<>-1: results[step] += cdiff(dv1, i, curve, amp, freq, slope, mode, peak)
+        if curve<>-1: results[step] += cdiff(dv1, i, curve, amp, freq, slope, peak, mode)
         i += 1.0/float(dt1)
         step += 1
     return results
@@ -138,29 +138,37 @@ def cdiff(float d, float i, int curve=0, float amp=0, int freq=1, float slope=1,
           float peak=0.5, int mode=0):
     cdef float val
 
-    if i==0: return 0
+    if i==0: return 0.0
 
     if curve==-1:
-        return 0
+        return 0.0
     elif curve==0:
+        if d==0: return 0.0
         val = d * i**2
     elif curve==1:
+        if d==0: return 0
         val = d * (1 - (1-i)**2)
     elif curve==2:
+        if d==0: return 0.0
         val = (0.5*d*(np.cos((i+1)*np.pi)+1))**slope
     elif curve==3:
+        if d==0: return 0.0
         val = (np.sinh((2*i-1)*slope) + np.sinh(slope))/(2*np.sinh(slope))/d
     elif curve==4:
+        if d==0: return 0.0
         val = (np.tanh((2*i-1)*slope) + np.tanh(slope))/(2*np.tanh(slope))/d
     elif curve==5:
+        if d==0: return 0.0
         val = d * ((1-np.exp(-slope*i))/(1-np.exp(-slope)))
     elif curve==6:
         if freq<=0:
             raise ValueError('Frequency much be positive non-zero')
+        if amp==0: return 0.0
         val = (0.5*amp*(np.cos(2*freq*i*np.pi + np.pi)+1))**slope + i*d
     elif curve==7:
         if freq<=0:
             raise ValueError('Frequency must be positive non-zero')
+        if amp==0: return 0.0
         val = amp*np.sin(i*np.pi*2*freq) + i*d
         if np.sign(val**slope) <> np.sign(val):
             val = val**slope * np.sign(val)
@@ -169,6 +177,7 @@ def cdiff(float d, float i, int curve=0, float amp=0, int freq=1, float slope=1,
     elif curve==8:
         if peak <= 0.0 or peak >= 1.0:
             raise ValueError('peak need to be 0-1')
+        if amp==0: return 0.0
         if  i <= peak: val = i * (amp/peak)
         elif i > peak: val = (1-i)*(amp/(1-peak))
         val += i*d
@@ -177,6 +186,7 @@ def cdiff(float d, float i, int curve=0, float amp=0, int freq=1, float slope=1,
             raise ValueError('peak need to be 0-1')
         if mode < 0 or mode > 3:
             raise ValueError('invalid mode')
+        if amp==0: return 0.0
         elif mode==0:
             if  i <= peak: val = amp * (1-(1-(i/peak))**2)
             elif i > peak: val = amp * (1-(1-((1-i)/(1-peak)))**2)

@@ -104,10 +104,13 @@ def load_genome(flame_node=None, xml_source=None, genome_handle=None):
 class Point(object):
     """A 2d point in cartesian space"""
 
-    def __init__(self, x=0.0, y=0.0, seq=None):
+    def __init__(self, x=0.0, y=0.0, seq=None, scalar=None):
         if seq is not None:
             self.x = seq[0]
             self.y = seq[1]
+        elif scalar is not None:
+            self.x = scalar
+            self.y = scalar
         else:
             self.x = x
             self.y = y

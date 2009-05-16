@@ -79,8 +79,10 @@ def pix_swap(np.ndarray[ndim=2, dtype=np.uint8_t] pal, int i0, int i1):
 
 def spline(np.ndarray[ndim=1, dtype=np.float32_t] cps,
            np.ndarray[ndim=1, dtype=np.int32_t] times,
-           int ti=0, int bi=0, int ci=-1,
-           int to=0, int bo=0, int co=-1,
+           int tii=0, int cii=-1, int bii=0,
+           int tio=0, int cio=-1, int bio=0,
+           int toi=0, int coi=-1, int boi=0,
+           int too=0, int coo=-1, int boo=0,
            int curve=-1, int amp=0, int freq=1, int slope=1,
            int mode=0, float peak=0.5):
 
@@ -95,10 +97,10 @@ def spline(np.ndarray[ndim=1, dtype=np.float32_t] cps,
 
     results = np.zeros(times[2]-times[1], dtype=np.float32)
 
-    cona = (1-ti)*(1+bi)*(1-ci)*0.5
-    conb = (1-ti)*(1-bi)*(1+ci)*0.5
-    conc = (1-to)*(1+bo)*(1+co)*0.5
-    cond = (1-to)*(1-bo)*(1-co)*0.5
+    cona = (1-tii)*(1-bii)*(1+cii)*0.5
+    conb = (1-tio)*(1+bio)*(1-cio)*0.5
+    conc = (1-toi)*(1-boi)*(1-coi)*0.5
+    cond = (1-too)*(1+boo)*(1+coo)*0.5
 
     dv0 = cps[1] - cps[0]
     dv1 = cps[2] - cps[1]
@@ -115,10 +117,10 @@ def spline(np.ndarray[ndim=1, dtype=np.float32_t] cps,
 
 # ralf  q(k) = (x(k+1)-2*x(k) + x(k-1))/(x(k+1)-x(k-1))
         tani =  cona*dv0 + conb*(dv1)
-        tani *= (dt1-dt0)/(dt1+dt0)
+        tani *= 2*dt1/(dt1+dt0)
 
         tano =  conc*dv1 + cond*dv2
-        tano *= (dt2-dt1)/(dt2+dt1)
+        tano *= 2*dt2/(dt2+dt1)
 
         results[step] = h00*cps[1] + h01*cps[2] + h10*tani + h11*tano
         if curve<>-1: results[step] += cdiff(dv1, i, curve, amp, freq, slope, peak, mode)

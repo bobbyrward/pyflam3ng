@@ -204,8 +204,10 @@ class Spline():
                    ,self._vects[i].end, self._vects[i+1].end]
             vals = numpy.zeros((4, self._count), numpy.float32)
             times = numpy.zeros(4, numpy.int32)
-            ti, ci, bi = self._vects[i].start.spline_out
-            to, co, bo = self._vects[i].end.spline_in
+            tii, cii, bii = self._vects[i].start.spline_in
+            tio, cio, bio = self._vects[i].start.spline_out
+            toi, coi, boi = self._vects[i].end.spline_in
+            too, coo, boo = self._vects[i].end.spline_out
             curve, amp, freq, slope, peak, mode = self._vects[i].curve
             if   curve=='lin':  curve=-1
             elif curve=='par':  curve=0
@@ -224,7 +226,8 @@ class Spline():
                 vals[j] = tcps[j].val
                 times[j] = tcps[j].time
             for j in xrange(self._count):
-                tmp[j][i0:i1] = spline(vals[:,j], times, ti, ci, bi, to, co, bo
+                tmp[j][i0:i1] = spline(vals[:,j], times, tii, cii, bii, tio, cio, bio
+                                      ,toi, coi, boi, too, coo, boo
                                       ,curve, amp, freq, slope, peak, mode)
         return tmp
 
@@ -248,6 +251,7 @@ class Spline():
         for i in xrange(seg+2):
             tmp.append(Vect(cps[i], cps[i+1]))
         self._vects = tmp
+        self._length = self._vects[-2].end.time
 
     def resize_vect(self, index, length):
         if index < 1 or index > len(self._vects)-1:

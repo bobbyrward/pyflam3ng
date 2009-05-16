@@ -250,40 +250,32 @@ cdef class GenomeHandle:
         flam3_copy(other._genome, self._genome)
         return other
 
-    def render(self, RenderBuffer buffer, **kwargs):
+    cdef _render(GenomeHandle self, void *out_buffer, unsigned int channels, int transparent, object progress, 
+            double pixel_aspect_ratio, int bits, double time, int nthreads):
+
         cdef flam3_frame frame
         cdef stat_struct stats
         cdef dict py_stats = dict()
-        cdef int transparent = <int>kwargs.get('transparent', 0)
-        cdef void *data = buffer._buffer
-        cdef unsigned int width = buffer._width
-        cdef unsigned int channels = buffer._bytes_per_pixel
-        cdef object progress_callback = kwargs.get('progress', None)
         cdef int c_flam3_field_both = flam3_field_both
 
         flam3_init_frame(&frame)
 
-        self._genome.width = buffer.width
-        self._genome.height = buffer.height
+        self._genome.ntemporal_samples = 1
+        self._genome.nbatches = 1
 
         frame.genomes = self._genome
         frame.ngenomes = 1
         frame.verbose = 0
         frame.earlyclip = 0
-
-        frame.pixel_aspect_ratio = <double>kwargs.get('pixel_aspect_ratio', 1.0)
-        frame.bits = <int>kwargs.get('bits', 33)
+        frame.pixel_aspect_ratio = pixel_aspect_ratio
+        frame.bits = bits
         frame.bytes_per_channel = 1
-        frame.time = <double>kwargs.get('time', 0.0)
-        self._genome.ntemporal_samples = 1
-        self._genome.nbatches = 1
+        frame.time = time
+        frame.nthreads = nthreads
 
-        frame.nthreads = <int>kwargs.get('nthreads', 0)
-        frame.nthreads = 1
-
-        if progress_callback is not None:
+        if progress is not None:
             frame.progress = __render_callback
-            frame.progress_parameter = <void*>progress_callback
+            frame.progress_parameter = <void*>progress
         else:
             frame.progress = NULL
             frame.progress_parameter = NULL
@@ -292,7 +284,7 @@ cdef class GenomeHandle:
             if frame.nthreads == 0:
                 frame.nthreads = flam3_count_nthreads()
 
-            flam3_render(&frame, data, width, c_flam3_field_both, channels, transparent, &stats)
+            flam3_render(&frame, out_buffer, c_flam3_field_both, channels, transparent, &stats)
 
         py_stats['badvals'] = stats.badvals
         py_stats['num_iters'] = stats.num_iters
@@ -300,6 +292,20 @@ cdef class GenomeHandle:
 
         return py_stats
 
+    def render(self, RenderBuffer out_buffer, **kwargs):
+        cdef int transparent = <int>kwargs.get('transparent', 0)
+        cdef void *data = out_buffer._buffer
+        cdef unsigned int channels = out_buffer._bytes_per_pixel
+        cdef object progress = kwargs.get('progress', None)
+        cdef double pixel_aspect_ratio = <double>kwargs.get('pixel_aspect_ratio', 1.0)
+        cdef int bits = <int>kwargs.get('bits', 33)
+        cdef double time = <double>kwargs.get('time', 0.0)
+        cdef int nthreads = <int>kwargs.get('nthreads', 0)
+
+        self._genome.width = out_buffer.width
+        self._genome.height = out_buffer.height
+
+        return self._render(data, channels, transparent, progress, pixel_aspect_ratio, bits, time, nthreads)
 
 
 def get_variation_list():

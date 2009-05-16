@@ -255,8 +255,7 @@ cdef extern from "flam3.h":
     void flam3_create_xform_distrib(flam3_genome *cp, unsigned short *xform_distrib) nogil
     int flam3_iterate(flam3_genome *g, int nsamples, int fuse, double *samples,
                          unsigned short *xform_distrib, randctx *rc) nogil
-    void flam3_interpolate(flam3_genome *genomes, int ngenomes, double time, flam3_genome *result) nogil
-    void flam3_interpolate_n(flam3_genome *result, int ncp, flam3_genome *cpi, double *c) nogil
+    void flam3_interpolate(flam3_genome *genomes, int ngenomes, double time, double stagger, flam3_genome *result) nogil
     void flam3_print(void *f, flam3_genome *g, char *extra_attributes, int print_edits) nogil
     char *flam3_print_to_string(flam3_genome *cp) nogil
     void flam3_random(flam3_genome *g, int *ivars, int ivars_n, int sym, int spec_xforms) nogil
@@ -279,7 +278,7 @@ cdef extern from "flam3.h":
     void flam3_apply_template(flam3_genome *cp, flam3_genome *templ) nogil
 
     int flam3_count_nthreads() nogil
-    void flam3_render(flam3_frame *f, void *out, int out_width, int field, int nchan, int transp, stat_struct *stats) nogil
+    void flam3_render(flam3_frame *f, void *out, int field, int nchan, int transp, stat_struct *stats) nogil
 
     double flam3_render_memory_required(flam3_frame *f) nogil
 
@@ -301,5 +300,12 @@ cdef extern from "flam3.h":
     void flam3_srandom() nogil
 
     void flam3_colorhist(flam3_genome *cp, int num_batches, double *hist) nogil
+
+    void add_to_action(char *action, char *addtoaction) nogil
+    void flam3_mutate(flam3_genome *cp, int mutate_mode, int *ivars, int ivars_n, int sym, double speed, randctx *rc, char *action) nogil
+    void flam3_cross(flam3_genome *cp0, flam3_genome *cp1, flam3_genome *out, int cross_mode, randctx *rc, char *action) nogil
+
+    void sheep_loop(flam3_genome *cp, double blend) nogil
+    void sheep_edge(flam3_genome *cp, double blend, int seqflag, double stagger) nogil
 
 

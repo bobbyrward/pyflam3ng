@@ -163,16 +163,77 @@ cdef class RenderBuffer:
     cdef unsigned int _width
     cdef unsigned int _height
 
-    def __cinit__(RenderBuffer self):
+    def __cinit__(RenderBuffer self, unsigned int width=0, unsigned int height=0, int channels=0):
         self._buffer = NULL
+        self._bytes_per_pixel = 0
+        self._width = 0
+        self._height = 0
+
+        if width != 0:
+            self.resize(width, height, channels)
 
     cpdef resize(RenderBuffer self, unsigned int width, unsigned int height, int channels):
-        if self._width != width and self._height != height and self._bytes_per_pixel != channels:
+        if self._width != width or self._height != height or self._bytes_per_pixel != channels:
             self._bytes_per_pixel = channels
             self._width = width
             self._height = height
 
             self._buffer = <unsigned char*>stdlib.realloc(self._buffer, width * height * self._bytes_per_pixel)
+
+    def write_to_qimage(RenderBuffer self, object qimage):
+        if self._buffer == NULL:
+            raise RuntimeError('Buffer is empty')
+
+        cdef unsigned char *dest_p = <unsigned char*>PyCObject_AsVoidPtr(qimage.bits().ascobject())
+        cdef Py_ssize_t total_len = self._width * self._height * self._bytes_per_pixel
+        cdef int x = 0
+        cdef int y = 0
+
+        if qimage.width() != self._width or qimage.height() != self._height:
+            raise RuntimeError('Image dimensions do not match')
+
+        if qimage.format() == 5: # Format_ARGB32
+            if self._bytes_per_pixel != 4:
+                raise RuntimeError('Image formats do not match')
+
+            for y in range(self._height):
+                for x in range(self._width):
+                    dest_p[(y * 4 * self._width) + (x * 4) + 0] = self._buffer[(y * 4 * self._width) + (x * 4) + 2]
+                    dest_p[(y * 4 * self._width) + (x * 4) + 1] = self._buffer[(y * 4 * self._width) + (x * 4) + 1]
+                    dest_p[(y * 4 * self._width) + (x * 4) + 2] = self._buffer[(y * 4 * self._width) + (x * 4) + 0]
+                    dest_p[(y * 4 * self._width) + (x * 4) + 3] = self._buffer[(y * 4 * self._width) + (x * 4) + 3]
+
+        elif qimage.format() == 4: # Format_RGB32
+            # Source is RGB
+            if self._bytes_per_pixel == 3:
+                for y in range(self._height):
+                    for x in range(self._width):
+                        dest_p[(y * 4 * self._width) + (x * 4) + 0] = self._buffer[(y * 3 * self._width) + (x * 3) + 2]
+                        dest_p[(y * 4 * self._width) + (x * 4) + 1] = self._buffer[(y * 3 * self._width) + (x * 3) + 1]
+                        dest_p[(y * 4 * self._width) + (x * 4) + 2] = self._buffer[(y * 3 * self._width) + (x * 3) + 0]
+                        dest_p[(y * 4 * self._width) + (x * 4) + 3] = 0xFF
+
+            # Source is ARGB with or without transparency
+            else:
+                for y in range(self._height):
+                    for x in range(self._width):
+                        dest_p[(y * 4 * self._width) + (x * 4) + 0] = self._buffer[(y * 4 * self._width) + (x * 4) + 2]
+                        dest_p[(y * 4 * self._width) + (x * 4) + 1] = self._buffer[(y * 4 * self._width) + (x * 4) + 1]
+                        dest_p[(y * 4 * self._width) + (x * 4) + 2] = self._buffer[(y * 4 * self._width) + (x * 4) + 0]
+                        dest_p[(y * 4 * self._width) + (x * 4) + 3] = 0xFF
+
+        elif qimage.format() == 13: # Format_RGB888
+            if self._bytes_per_pixel != 3:
+                raise RuntimeError('Image formats do not match')
+
+            for y in range(self._height):
+                for x in range(self._width):
+                    dest_p[(y * 3 * self._width) + (x * 3) + 0] = self._buffer[(y * 3 * self._width) + (x * 3) + 0]
+                    dest_p[(y * 3 * self._width) + (x * 3) + 1] = self._buffer[(y * 3 * self._width) + (x * 3) + 1]
+                    dest_p[(y * 3 * self._width) + (x * 3) + 2] = self._buffer[(y * 3 * self._width) + (x * 3) + 2]
+
+        else:
+            raise RuntimeError('Unsupported QImage format')
 
     def write_to_legacy_buffer(RenderBuffer self, object legacy_buffer):
         if self._buffer == NULL:
@@ -344,4 +405,5 @@ def to_xml(GenomeHandle genome):
     flam3_free(c_string)
 
     return py_string
+
 

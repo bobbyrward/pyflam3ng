@@ -309,7 +309,7 @@ class Variations(object):
     """Wraps the variations in use by an XForm"""
 
     def __init__(self):
-        self._values = {}
+        self._values = defaultdict(lambda: 0.0)
         self._variables = {}
 
     def __getitem__(self, key):

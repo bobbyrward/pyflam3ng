@@ -196,8 +196,8 @@ cdef class RenderBuffer:
             if self._bytes_per_pixel != 4:
                 raise RuntimeError('Image formats do not match')
 
-            for y in range(self._height):
-                for x in range(self._width):
+            for 0 <= y <= self._height:
+                for 0 <= x <= self._width:
                     dest_p[(y * 4 * self._width) + (x * 4) + 0] = self._buffer[(y * 4 * self._width) + (x * 4) + 2]
                     dest_p[(y * 4 * self._width) + (x * 4) + 1] = self._buffer[(y * 4 * self._width) + (x * 4) + 1]
                     dest_p[(y * 4 * self._width) + (x * 4) + 2] = self._buffer[(y * 4 * self._width) + (x * 4) + 0]
@@ -206,8 +206,8 @@ cdef class RenderBuffer:
         elif qimage.format() == 4: # Format_RGB32
             # Source is RGB
             if self._bytes_per_pixel == 3:
-                for y in range(self._height):
-                    for x in range(self._width):
+                for 0 <= y <= self._height:
+                    for 0 <= x <= self._width:
                         dest_p[(y * 4 * self._width) + (x * 4) + 0] = self._buffer[(y * 3 * self._width) + (x * 3) + 2]
                         dest_p[(y * 4 * self._width) + (x * 4) + 1] = self._buffer[(y * 3 * self._width) + (x * 3) + 1]
                         dest_p[(y * 4 * self._width) + (x * 4) + 2] = self._buffer[(y * 3 * self._width) + (x * 3) + 0]
@@ -215,8 +215,8 @@ cdef class RenderBuffer:
 
             # Source is ARGB with or without transparency
             else:
-                for y in range(self._height):
-                    for x in range(self._width):
+                for 0 <= y <= self._height:
+                    for 0 <= x <= self._width:
                         dest_p[(y * 4 * self._width) + (x * 4) + 0] = self._buffer[(y * 4 * self._width) + (x * 4) + 2]
                         dest_p[(y * 4 * self._width) + (x * 4) + 1] = self._buffer[(y * 4 * self._width) + (x * 4) + 1]
                         dest_p[(y * 4 * self._width) + (x * 4) + 2] = self._buffer[(y * 4 * self._width) + (x * 4) + 0]
@@ -226,8 +226,8 @@ cdef class RenderBuffer:
             if self._bytes_per_pixel != 3:
                 raise RuntimeError('Image formats do not match')
 
-            for y in range(self._height):
-                for x in range(self._width):
+            for 0 <= y <= self._height:
+                for 0 <= x <= self._width:
                     dest_p[(y * 3 * self._width) + (x * 3) + 0] = self._buffer[(y * 3 * self._width) + (x * 3) + 0]
                     dest_p[(y * 3 * self._width) + (x * 3) + 1] = self._buffer[(y * 3 * self._width) + (x * 3) + 1]
                     dest_p[(y * 3 * self._width) + (x * 3) + 2] = self._buffer[(y * 3 * self._width) + (x * 3) + 2]
@@ -373,7 +373,7 @@ def get_variation_list():
     cdef list var_list = list()
     cdef int idx
 
-    for idx in range(flam3_nvariations):
+    for 0 <= idx <= flam3_nvariations:
         var_list.append(flam3_variation_names[idx])
 
     return var_list
@@ -388,7 +388,7 @@ def from_xml(str xml_source, str filename='', object defaults=True):
 
     result = flam3_parse_xml2(c_buffer_copy, filename, flam3_defaults_on if defaults else flam3_defaults_off, &ncps)
 
-    for idx in range(ncps):
+    for 0 <= idx <= ncps:
         handle = GenomeHandle()
         handle.copy_genome(&result[idx])
         result_list.append(handle)

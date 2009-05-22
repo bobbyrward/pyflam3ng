@@ -382,7 +382,7 @@ class Variations(object):
 
 class Palette(object):
     def __init__(self):
-        self.array = numpy.zeros((256,3), numpy.uint8)
+        self.array = numpy.zeros((256,3), numpy.float32)
 
     def smooth(self, ntries=50, trysize=10000):
         self.array = util.palette_improve(self.array, ntries, trysize)
@@ -943,7 +943,7 @@ class Genome(object):
         root = etree.Element('flame')
         root.set('name', self.name)
         root.set('time', str(self.time))
-        root.set('size', '%f %f' % (self.width, self.height))
+        root.set('size', '%d %d' % (self.width, self.height))
         root.set('center', '%f %f' % tuple(self.center[0]))
         root.set('rotate', str(self.rotate))
         root.set('scale', str(self.pixels_per_unit))
@@ -952,7 +952,7 @@ class Genome(object):
         root.set('oversample', str(self.spatial_oversample))
         root.set('filter', str(self.spatial_filter_radius))
         shapes = ['gaussian', 'hermite', 'box', 'triangle', 'bell', 'bspline',
-                  'lanczos3', 'lanczos2', 'mitchell', 'blackman', 'catrom', 
+                  'lanczos3', 'lanczos2', 'mitchell', 'blackman', 'catrom',
                   'hamming', 'hanning', 'quadratic']
         root.set('filter_shape', shapes[self.spatial_filter_select])
         root.set('quality', str(self.nbatches))
@@ -968,14 +968,14 @@ class Genome(object):
             root.set('interpolation', 'smooth')
         if self.palette_interpolation == 1:
             root.set('palette_interpolation', 'sweep')
-        types = ['linear', 'log', 'old', 'older']        
+        types = ['linear', 'log', 'old', 'older']
         if self.interpolation_type <> 0:
             root.set('interpolation_type', types[self.interpolation_type])
         root.set('estimator_radius', str(self.estimator))
         root.set('estimator_minimum', str(self.estimator_minimum))
         root.set('estimator_curve', str(self.estimator_curve))
         if self.ntemporal_samples <> 0:
-            root.set('temporal_samples', str(self.ntemporal_samples))
+            root.set('temporal_samples', '%d' % (self.ntemporal_samples))
         if self.temporal_filter_type <> 0:
             root.set('temporal_filter_type', str(self.temporal_filter_type))
         if self.temporal_filter_width <> 0:
@@ -988,7 +988,7 @@ class Genome(object):
             xroot.set('weight', str(xf.weight))
             xroot.set('color', str(xf.color))
             xroot.set('symmetry', str(xf.symmetry))
-            #xroot.set('chaos', 
+            #xroot.set('chaos',
             xroot.set('coefs', '%f %f %f %f %f %f' % tuple(xf.coefs))
             if xf.post <> [0, 1, 1, 0, 0, 0]:
                 xroot.set('post', '%f %f %f %f %f %f' % tuple(xf.post))
@@ -1014,7 +1014,7 @@ class Genome(object):
         for i in xrange(256):
             croot = etree.SubElement(root, "color")
             croot.set('index', str(i))
-            croot.set('rgb', '%d %d %d' % tuple(self.palette.array[i]))
+            croot.set('rgb', '%.2f %.2f %.2f' % tuple(self.palette.array[i]))
         return root
     #end xml
 

@@ -291,7 +291,7 @@ cdef class RenderBuffer:
         if self._buffer != NULL:
             stdlib.free(self._buffer)
             self._buffer = NULL
-''' It overflows
+
 def interpolate(list genome_list, double time, double stagger=0.0):
     cdef flam3_genome* genomes
     cdef flam3_genome* res
@@ -303,7 +303,7 @@ def interpolate(list genome_list, double time, double stagger=0.0):
 
     for idx, genome in enumerate(genome_list):
         memmove(&genomes, (<GenomeHandle>genome)._genome, sizeof(flam3_genome))
-
+'''
     flam3_interpolate(genomes, ngenomes, time, stagger, res)
     memmove((<GenomeHandle>result)._genome, res, sizeof(flam3_genome))
     return result

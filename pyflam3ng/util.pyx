@@ -3,10 +3,10 @@ cimport numpy as np
 import random as rn
 
 
-def palette_improve(np.ndarray[ndim=2, dtype=np.uint8_t] orig, int ntries,\
+def palette_improve(np.ndarray[ndim=2, dtype=np.float32_t] orig, int ntries,\
          int trysize):
-    cdef np.ndarray[ndim=2, dtype=np.uint8_t] best = orig.copy()
-    cdef np.ndarray[ndim=2, dtype=np.uint8_t] pal
+    cdef np.ndarray[ndim=2, dtype=np.float32_t] best = orig.copy()
+    cdef np.ndarray[ndim=2, dtype=np.float32_t] pal
     cdef int best_len = get_length(best)
     cdef int j, i, i0, i1, as_is, swapd, pal_len
     for i in range(ntries):
@@ -55,21 +55,21 @@ def palette_improve(np.ndarray[ndim=2, dtype=np.uint8_t] orig, int ntries,\
             pix_swap(best, i0, i1)
     return best
 
-def get_length(np.ndarray[ndim=2, dtype=np.uint8_t] pal):
+def get_length(np.ndarray[ndim=2, dtype=np.float32_t] pal):
     cdef int length = 0
     cdef int i
     for i in range(1,256):
         length += pix_diff(pal, i, i-1)
     return length
 
-def pix_diff(np.ndarray[ndim=2, dtype=np.uint8_t] pal, int i0, int i1):
+def pix_diff(np.ndarray[ndim=2, dtype=np.float32_t] pal, int i0, int i1):
     cdef int diff = 0
     cdef int i
     for i in range(3):
         diff += (pal[i0,i] - pal[i1,i])**2
     return diff
 
-def pix_swap(np.ndarray[ndim=2, dtype=np.uint8_t] pal, int i0, int i1):
+def pix_swap(np.ndarray[ndim=2, dtype=np.float32_t] pal, int i0, int i1):
     cdef int i
     cdef unsigned char tmp
     for i in range(3):

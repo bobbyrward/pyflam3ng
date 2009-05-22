@@ -83,6 +83,8 @@ def spline(np.ndarray[ndim=1, dtype=np.float32_t] cps,
            int curve=-1, int amp=0, int freq=1, int slope=1,
            int mode=0, float peak=0.5):
 
+    print curve
+
     cdef np.ndarray[ndim=1, dtype=np.float32_t] results
     cdef float cona, conb, conc, cond
     cdef float h00, h01, h10, h11

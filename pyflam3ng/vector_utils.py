@@ -66,7 +66,7 @@ class Vect(object):
     def _get_curve(self):
         return self._curve, self.amp, self.freq, self.slope, self.peak, self.mode
 
-    def _set_curve(self, curve, amp=0, freq=1, slope=1, peak=0.5, mode=0):
+    def set_curve(self, curve, amp=0, freq=1, slope=1, peak=0.5, mode=0):
         if not curve in valid_curves:
             raise ValueError('Bad curve value')
         else:
@@ -83,7 +83,7 @@ class Vect(object):
             self.peak = peak
             self.mode = mode
 
-    curve = property(_get_curve, _set_curve)
+    curve = property(_get_curve)
 
     def __len__(self):
         self._length = self.end.time - self.start.time
@@ -134,11 +134,11 @@ class Spline():
     def set_all_curves(self, curve, amp=0, freq=1, slope=1, peak=0.5, mode=0):
         if curve in valid_curves:
             for v in self._vects[1:-1]:
-                v.curve = curve, amp, freq, slope, peak, mode
+                v.set_curve(curve, amp, freq, slope, peak, mode)
 
     def set_curve(self, curve, amp=0, freq=1, slope=1, peak=0.5, mode=0):
         if 0 <= index < len(self._vects)-2:
-            v[index+1].curve = curve, amp, freq, slope, peak, mode
+            v[index+1].set_curve(curve, amp, freq, slope, peak, mode)
         else:
             raise ValueError('index oob')
 
@@ -178,7 +178,7 @@ class Spline():
     def calculate(self):
         if len(self._cps) < 2:
             raise ValueError('need more cps first')
-        self.setup_vects()
+        if len(self._vects) == 0: self.setup_vects()
         tmp = numpy.zeros((self._count, self._length), numpy.float32)
         for i in xrange(1, len(self._vects)-1):
             i0 = self._vects[i].start.time
@@ -202,7 +202,7 @@ class Spline():
             elif curve=='plin': curve=9
             elif curve=='ppar': curve=10
             else: raise ValueError('no such curve')
-
+            print curve
             for j in xrange(4):
                 vals[j] = tcps[j].val
                 times[j] = tcps[j].time

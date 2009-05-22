@@ -21,7 +21,8 @@
 #  Boston, MA 02111-1307, USA.
 ##############################################################################
 
-cimport flam3
+import sys
+cimport flam3_api
 cimport numpy as np
 cimport stdlib
 
@@ -180,7 +181,32 @@ cdef class RenderBuffer:
 
             self._buffer = <unsigned char*>stdlib.realloc(self._buffer, width * height * self._bytes_per_pixel)
 
+    def to_image(RenderBuffer, self, object image):
+        """Write the buffer to a PIL Image"""
+        cdef str mode
+        cdef object Image
+        cdef object py_buffer
+        cdef int size = self._width*self._height*self._bytes_per_pixel
+
+        if 'Image' not in sys.modules:
+            raise RuntimeError('You must import Image before calling this method')
+
+        Image = sys.modules['Image']
+
+        if self._bytes_per_pixel == 3:
+            mode = 'RGB'
+        else:
+            mode = 'RGBA'
+
+        py_buffer = PyBuffer_FromMemory(self._buffer, size)
+
+        img = Image.frombuffer(mode, size, py_buffer, 'raw')
+
+        return img
+
+
     def write_to_qimage(RenderBuffer self, object qimage):
+        """Write the buffer to a PyQt4 QImage"""
         if self._buffer == NULL:
             raise RuntimeError('Buffer is empty')
 

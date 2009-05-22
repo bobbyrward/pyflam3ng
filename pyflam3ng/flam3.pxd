@@ -35,6 +35,7 @@ cdef extern from "Python.h":
     int PyObject_AsWriteBuffer(object, void **, Py_ssize_t *)    except -1
     void *PyCObject_AsVoidPtr(object) except NULL
     object PyString_FromStringAndSize (char *, Py_ssize_t)
+    object PyBuffer_FromMemory(void *ptr, Py_ssize_t size) 
 
 
 cdef enum:

@@ -22,7 +22,7 @@
 ##############################################################################
 
 import sys
-cimport flam3_api
+cimport flam3
 cimport numpy as np
 cimport stdlib
 
@@ -193,7 +193,7 @@ cdef class RenderBuffer:
         else:
             mode = 'RGBA'
 
-        py_buffer = PyBuffer_FromMemory(self._buffer, size)
+        py_buffer = PyBuffer_FromMemory(<void*>self._buffer, size)
 
         img = Image.frombuffer(mode, size, py_buffer, 'raw')
 

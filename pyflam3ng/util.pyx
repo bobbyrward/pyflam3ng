@@ -71,7 +71,7 @@ def pix_diff(np.ndarray[ndim=2, dtype=np.float32_t] pal, int i0, int i1):
 
 def pix_swap(np.ndarray[ndim=2, dtype=np.float32_t] pal, int i0, int i1):
     cdef int i
-    cdef unsigned char tmp
+    cdef float tmp
     for i in range(3):
         tmp = pal[i0,i]
         pal[i0,i] = pal[i1,i]
@@ -79,10 +79,7 @@ def pix_swap(np.ndarray[ndim=2, dtype=np.float32_t] pal, int i0, int i1):
 
 def spline(np.ndarray[ndim=1, dtype=np.float32_t] cps,
            np.ndarray[ndim=1, dtype=np.int32_t] times,
-           int tii=0, int cii=-1, int bii=0,
-           int tio=0, int cio=-1, int bio=0,
-           int toi=0, int coi=-1, int boi=0,
-           int too=0, int coo=-1, int boo=0,
+           int ti=0, int ci=-1, int bi=0, int to=0, int co=-1, int bo=0,
            int curve=-1, int amp=0, int freq=1, int slope=1,
            int mode=0, float peak=0.5):
 
@@ -97,10 +94,10 @@ def spline(np.ndarray[ndim=1, dtype=np.float32_t] cps,
 
     results = np.zeros(times[2]-times[1], dtype=np.float32)
 
-    cona = (1-tii)*(1-bii)*(1+cii)*0.5
-    conb = (1-tio)*(1+bio)*(1-cio)*0.5
-    conc = (1-toi)*(1-boi)*(1-coi)*0.5
-    cond = (1-too)*(1+boo)*(1+coo)*0.5
+    cona = (1-ti)*(1-bi)*(1+ci)*0.5
+    conb = (1-ti)*(1+bi)*(1-ci)*0.5
+    conc = (1-to)*(1-bo)*(1-co)*0.5
+    cond = (1-to)*(1+bo)*(1+co)*0.5
 
     dv0 = cps[1] - cps[0]
     dv1 = cps[2] - cps[1]
@@ -130,10 +127,10 @@ def spline(np.ndarray[ndim=1, dtype=np.float32_t] cps,
 
 """
 Curve types:
-    non-parametric: 0 - par, 1 - npar
-    w/ slope 2 - hcos, 3 - sinh, 4 - tanh, 5 - exp
-    w/ amp + freq + slope: 6 - cos, 7 - sin
-    w/ amp + peak: 8 - plin, 9 - ppar (w/mode - 0=--, 1=-+, 2=+-, 3=++)
+    non-parametric: 0 - lin, 1 - par, 2 - npar
+    w/ slope 3 - hcos, 4 - sinh, 5 - tanh, 6 - exp
+    w/ amp + freq + slope: 7 - cos, 8 - sin
+    w/ amp + peak: 9 - plin, 10 - ppar (w/mode - 0=--, 1=-+, 2=+-, 3=++)
 """
 
 def cdiff(float d, float i, int curve=0, float amp=0, int freq=1, float slope=1,
@@ -145,29 +142,32 @@ def cdiff(float d, float i, int curve=0, float amp=0, int freq=1, float slope=1,
     if curve==-1:
         return 0.0
     elif curve==0:
-        if d==0: return 0.0
-        val = d * i**2
+        if d==0 and amp==0: return 0.0
+        val = (d + amp) * i
     elif curve==1:
-        if d==0: return 0
-        val = d * (1 - (1-i)**2)
+        if d==0 and amp==0: return 0.0
+        val = (d + amp) * i**2
     elif curve==2:
-        if d==0: return 0.0
-        val = (0.5*d*(np.cos((i+1)*np.pi)+1))**slope
+        if d==0 and amp==0: return 0
+        val = (d + amp) * (1 - (1-i)**2)
     elif curve==3:
-        if d==0: return 0.0
-        val = (np.sinh((2*i-1)*slope) + np.sinh(slope))/(2*np.sinh(slope))/d
+        if d==0 and amp==0: return 0.0
+        val = (0.5*(d+amp)*(np.cos((i+1)*np.pi)+1))**slope
     elif curve==4:
         if d==0: return 0.0
-        val = (np.tanh((2*i-1)*slope) + np.tanh(slope))/(2*np.tanh(slope))/d
+        val = (np.sinh((2*i-1)*slope) + np.sinh(slope))/(2*np.sinh(slope))/d
     elif curve==5:
         if d==0: return 0.0
-        val = d * ((1-np.exp(-slope*i))/(1-np.exp(-slope)))
+        val = (np.tanh((2*i-1)*slope) + np.tanh(slope))/(2*np.tanh(slope))/d
     elif curve==6:
+        if d==0 and amp==0: return 0.0
+        val = (d+amp) * ((1-np.exp(-slope*i))/(1-np.exp(-slope)))
+    elif curve==7:
         if freq<=0:
             raise ValueError('Frequency much be positive non-zero')
         if amp==0: return 0.0
         val = (0.5*amp*(np.cos(2*freq*i*np.pi + np.pi)+1))**slope + i*d
-    elif curve==7:
+    elif curve==8:
         if freq<=0:
             raise ValueError('Frequency must be positive non-zero')
         if amp==0: return 0.0
@@ -176,14 +176,14 @@ def cdiff(float d, float i, int curve=0, float amp=0, int freq=1, float slope=1,
             val = val**slope * np.sign(val)
         else:
             val = val**slope
-    elif curve==8:
+    elif curve==9:
         if peak <= 0.0 or peak >= 1.0:
             raise ValueError('peak need to be 0-1')
         if amp==0: return 0.0
         if  i <= peak: val = i * (amp/peak)
         elif i > peak: val = (1-i)*(amp/(1-peak))
         val += i*d
-    elif curve==9:
+    elif curve==10:
         if peak <= 0.0 or peak >= 1.0:
             raise ValueError('peak need to be 0-1')
         if mode < 0 or mode > 3:

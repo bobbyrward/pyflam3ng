@@ -27,9 +27,9 @@ class CP(object):
         else:
             self.val = numpy.array(val, numpy.float32)
         self.time = time #placeholder - irregular grid not ready
-        self.ti, self.to = t,t
-        self.ci, self.co = c,c
-        self.bi, self.bo = b,b
+        self.t = t
+        self.c = c
+        self.b = b
 
     def get_pad(self, target):
         """Returns a CP for padding interp with <4 points.
@@ -42,29 +42,12 @@ class CP(object):
         return CP(self.val-dv, self.time-dt)
 
     def _get_spline(self):
-        return self.ti, self.ci, self.bi
+        return self.t, self.c, self.b
 
     def _set_spline(self, params):
-        self.ti, self.ci, self.bi = params
-        self.to, self.co, self.bo = params
+        self.t, self.c, self.b = params
 
     spline = property(_get_spline, _set_spline, doc="Spline parameters in a list")
-
-    def _get_spline_in(self):
-        return self.ti, self.ci, self.bi
-
-    def _set_spline_in(self, params):
-        self.ti, self.ci, self.bi = params
-
-    spline_in = property(_get_spline_in, _set_spline_in)
-
-    def _get_spline_out(self):
-        return self.to, self.co, self.bo
-
-    def _set_spline_out(self, params):
-        self.to, self.co, self.bo = params
-
-    spline_out = property(_get_spline_out, _set_spline_out)
 #---end CP
 
 class Vect(object):
@@ -84,7 +67,7 @@ class Vect(object):
         return self._curve, self.amp, self.freq, self.slope, self.peak, self.mode
 
     def _set_curve(self, curve, amp=0, freq=1, slope=1, peak=0.5, mode=0):
-        if curve not in valid_curves:
+        if not curve in valid_curves:
             raise ValueError('Bad curve value')
         else:
             if curve in ['plin', 'ppar'] and (peak <= 0 or peak >= 1):
@@ -204,30 +187,27 @@ class Spline():
                    ,self._vects[i].end, self._vects[i+1].end]
             vals = numpy.zeros((4, self._count), numpy.float32)
             times = numpy.zeros(4, numpy.int32)
-            tii, cii, bii = self._vects[i].start.spline_in
-            tio, cio, bio = self._vects[i].start.spline_out
-            toi, coi, boi = self._vects[i].end.spline_in
-            too, coo, boo = self._vects[i].end.spline_out
+            ti, ci, bi = self._vects[i].start.spline
+            to, co, bo = self._vects[i].end.spline
             curve, amp, freq, slope, peak, mode = self._vects[i].curve
-            if   curve=='lin':  curve=-1
-            elif curve=='par':  curve=0
-            elif curve=='npar': curve=1
-            elif curve=='hcos': curve=2
-            elif curve=='sinh': curve=3
-            elif curve=='tanh': curve=4
-            elif curve=='exp':  curve=5
-            elif curve=='cos':  curve=6
-            elif curve=='sin':  curve=7
-            elif curve=='plin': curve=8
-            elif curve=='ppar': curve=9
+            if   curve=='lin':  curve=0
+            elif curve=='par':  curve=1
+            elif curve=='npar': curve=2
+            elif curve=='hcos': curve=3
+            elif curve=='sinh': curve=4
+            elif curve=='tanh': curve=5
+            elif curve=='exp':  curve=6
+            elif curve=='cos':  curve=7
+            elif curve=='sin':  curve=8
+            elif curve=='plin': curve=9
+            elif curve=='ppar': curve=10
             else: raise ValueError('no such curve')
 
             for j in xrange(4):
                 vals[j] = tcps[j].val
                 times[j] = tcps[j].time
             for j in xrange(self._count):
-                tmp[j][i0:i1] = spline(vals[:,j], times, tii, cii, bii, tio, cio, bio
-                                      ,toi, coi, boi, too, coo, boo
+                tmp[j][i0:i1] = spline(vals[:,j], times, ti, ci, bi, to, co, bo
                                       ,curve, amp, freq, slope, peak, mode)
         return tmp
 

@@ -23,7 +23,6 @@
 
 from distutils.core import setup
 from distutils.extension import Extension
-#from Pyrex.Distutils import build_ext
 from Cython.Distutils import build_ext
 import commands
 import os
@@ -47,14 +46,47 @@ def pkgconfig(*packages, **kw):
             kw[k] = list(set(v))
     return kw
 
+def flam3_compiler_options():
+    return pkgconfig('flam3')
+
+
+def numpy_compiler_options():
+    import numpy
+    return {'include_dirs': [numpy.get_include()]}
+
+
+def merge_options(x, y):
+    for k, v in y.iteritems():
+        if k not in x:
+            x[k] = v
+        else:
+            x[k].extend(v)
+
+    return x
+
+
+def _Extension(name, sources, options_dict, *additional_options):
+    if options_dict is None:
+        options_dict = {}
+
+    for x in additional_options:
+        options_dict = merge_options(options_dict, x)
+
+    return Extension(name, sources, **options_dict)
 
 
 setup(
-  name = "pyflam3ng",
-  ext_modules=[
-    Extension("pyflam3ng.flam3", ["pyflam3ng/flam3.pyx"], **pkgconfig('flam3')),
-    Extension("pyflam3ng.util", ["pyflam3ng/util.pyx"]),
+    name = "pyflam3ng",
+    ext_modules=[
+        _Extension("pyflam3ng.flam3", ["pyflam3ng/flam3.pyx"],
+            numpy_compiler_options(),
+            flam3_compiler_options()
+        ),
+        _Extension("pyflam3ng.util", ["pyflam3ng/util.pyx"],
+            numpy_compiler_options()
+        ),
     ],
-  cmdclass = {'build_ext': build_ext}
+    cmdclass = {'build_ext': build_ext}
+
 )
 

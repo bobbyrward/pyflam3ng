@@ -923,8 +923,14 @@ class Genome(object):
     final = property(_get_final, _set_final,
              doc='Returns the final xform (None if disabled).')
 
+    def _get_flame_node(self):
+        self._flame_node = self.to_xml()
+        return self._flame_node
+
+    flame_node = property(_get_flame_node)
+
     def _init_from_node(self, flame_node):
-        self.flame_node = flame_node
+        self._flame_node = flame_node
         self._refresh_handle_from_self()
         self._refresh_self_from_handle()
 
@@ -932,8 +938,89 @@ class Genome(object):
         self.genome_handle = genome_handle
         self._refresh_self_from_handle()
 
+    #start xml
+    def to_xml(self):
+        root = etree.Element('flame')
+        root.set('name', self.name)
+        root.set('time', str(self.time))
+        root.set('size', '%f %f' % (self.width, self.height))
+        root.set('center', '%f %f' % tuple(self.center[0]))
+        root.set('rotate', str(self.rotate))
+        root.set('scale', str(self.pixels_per_unit))
+        if self.zoom <> 0:
+            root.set('zoom', str(self.zoom))
+        root.set('oversample', str(self.spatial_oversample))
+        root.set('filter', str(self.spatial_filter_radius))
+        shapes = ['gaussian', 'hermite', 'box', 'triangle', 'bell', 'bspline',
+                  'lanczos3', 'lanczos2', 'mitchell', 'blackman', 'catrom', 
+                  'hamming', 'hanning', 'quadratic']
+        root.set('filter_shape', shapes[self.spatial_filter_select])
+        root.set('quality', str(self.nbatches))
+        root.set('brightness', str(self.brightness))
+        root.set('gamma', str(self.gamma))
+        root.set('vibrancy', str(self.vibrancy))
+        root.set('contrast', str(self.contrast))
+        root.set('highlight_power', str(self.highlight_power))
+        root.set('background', '%d %d %d' % tuple(self.background[0]))
+        if self.symmetry <> 0:
+            root.set('symmetry', str(self.symmetry))
+        if self.interpolation == 1:
+            root.set('interpolation', 'smooth')
+        if self.palette_interpolation == 1:
+            root.set('palette_interpolation', 'sweep')
+        types = ['linear', 'log', 'old', 'older']        
+        if self.interpolation_type <> 0:
+            root.set('interpolation_type', types[self.interpolation_type])
+        root.set('estimator_radius', str(self.estimator))
+        root.set('estimator_minimum', str(self.estimator_minimum))
+        root.set('estimator_curve', str(self.estimator_curve))
+        if self.ntemporal_samples <> 0:
+            root.set('temporal_samples', str(self.ntemporal_samples))
+        if self.temporal_filter_type <> 0:
+            root.set('temporal_filter_type', str(self.temporal_filter_type))
+        if self.temporal_filter_width <> 0:
+            root.set('temporal_filter_width', str(self.temporal_filter_width))
+        if self.temporal_filter_exp <> 0:
+            root.set('temporal_filter_exp', str(self.temporal_filter_exp))
+
+        for xf in self.xforms:
+            xroot = etree.SubElement(root, "xform")
+            xroot.set('weight', str(xf.weight))
+            xroot.set('color', str(xf.color))
+            xroot.set('symmetry', str(xf.symmetry))
+            #xroot.set('chaos', 
+            xroot.set('coefs', '%f %f %f %f %f %f' % tuple(xf.coefs))
+            if xf.post <> [0, 1, 1, 0, 0, 0]:
+                xroot.set('post', '%f %f %f %f %f %f' % tuple(xf.post))
+            for var, weight in xf.vars.values.items():
+                xroot.set(var, str(weight))
+                if var in xf.vars.variables.keys():
+                    for vari, valu in xf.vars.variables[var].items():
+                        xroot.set('%s_%s' % (var,vari), str(valu))
+
+        if self.has_final():
+            froot = etree.SubElement(root, "finalxform")
+            froot.set('color', str(self.final.color))
+            froot.set('symmetry', str(self.final.symmetry))
+            froot.set('coefs', '%f %f %f %f %f %f' % tuple(self.final.coefs))
+            if self.final.post <> [0, 1, 1, 0, 0, 0]:
+                froot.set('post', '%f %f %f %f %f %f' % tuple(self.final.post))
+            for var, weight in self.final.vars.values.items():
+                froot.set(var, str(weight))
+                if var in self.final.vars.variables.keys():
+                    for vari, valu in self.final.vars.variables[var].items():
+                        froot.set('%s_%s' % (var,vari), str(valu))
+
+        for i in xrange(256):
+            croot = etree.SubElement(root, "color")
+            croot.set('index', str(i))
+            croot.set('rgb', '%d %d %d' % tuple(self.palette.array[i]))
+        return root
+    #end xml
+
+
     def clone(self):
-        return load_genome(xml_source=etree.tostring(self.flame_node))
+        return load_genome(xml_source=etree.tostring(self._flame_node))
 
     def render(self, buffer, **kwargs):
         return self.genome_handle.render(buffer, **kwargs)
@@ -946,22 +1033,22 @@ class Genome(object):
         self._refresh_self_from_handle()
 
     def _refresh_handle_from_self(self):
-        self.genome_handle = flam3.from_xml(etree.tostring(self.flame_node))[0]
+        self.genome_handle = flam3.from_xml(etree.tostring(self._flame_node))[0]
 
     def _refresh_self_from_handle(self):
         xml_source = flam3.to_xml(self.genome_handle)
-        self.flame_node = etree.fromstring(xml_source)
-        attrib = self.flame_node.attrib
+        self._flame_node = etree.fromstring(xml_source)
+        attrib = self._flame_node.attrib
 
-        def scalar_attrib(src_name, dest_name=None, coerce_type=float, node=self.flame_node):
+        def scalar_attrib(src_name, dest_name=None, coerce_type=float, node=self._flame_node):
             if src_name in node.attrib:
                 setattr(self, dest_name if dest_name else src_name,
                         coerce_type(node.attrib[src_name]))
 
-        def whitespace_array(src_name, coerce_type=float, node=self.flame_node):
+        def whitespace_array(src_name, coerce_type=float, node=self._flame_node):
             return map(coerce_type, node.attrib.get(src_name).split(' '))
 
-        def mapped_attrib(src_name, dest_name=None, mapping={}, node=self.flame_node):
+        def mapped_attrib(src_name, dest_name=None, mapping={}, node=self._flame_node):
             if src_name in node.attrib:
                 setattr(self, dest_name if dest_name else src_name,
                         mapping[node.attrib[src_name]])
@@ -1010,13 +1097,13 @@ class Genome(object):
             'triangle': flam3.flam3_triangle_kernel,
             'bell': flam3.flam3_bell_kernel,
             'bspline': flam3.flam3_b_spline_kernel,
+            'lanczos3': flam3.flam3_lanczos3_kernel,
+            'lanczos2': flam3.flam3_lanczos2_kernel,
             'mitchell': flam3.flam3_mitchell_kernel,
             'blackman': flam3.flam3_blackman_kernel,
             'catrom': flam3.flam3_catrom_kernel,
-            'hanning': flam3.flam3_hanning_kernel,
             'hamming': flam3.flam3_hamming_kernel,
-            'lanczos3': flam3.flam3_lanczos3_kernel,
-            'lanczos2': flam3.flam3_lanczos2_kernel,
+            'hanning': flam3.flam3_hanning_kernel,
             'quadratic': flam3.flam3_quadratic_kernel,
         })
 
@@ -1033,7 +1120,8 @@ class Genome(object):
         })
 
         mapped_attrib('interpolation', mapping={
-            'smooth': flam3.flam3_interpolation_linear,
+            'linear': flam3.flam3_interpolation_linear,
+            'smooth': flam3.flam3_interpolation_smooth,
         })
 
         mapped_attrib('interpolation_type', mapping={
@@ -1044,27 +1132,25 @@ class Genome(object):
         })
 
         mapped_attrib('palette_interpolation', mapping={
-            'sweep': flam3.flam3_palette_interpolation_hsv ,
+            'hsv': flam3.flam3_palette_interpolation_hsv,
+            'sweep': flam3.flam3_palette_interpolation_sweep ,
         })
 
 
-        sym_node = self.flame_node.xpath('//symmetry')
+        sym_node = self._flame_node.xpath('//symmetry')
 
         if sym_node:
             scalar_attrib('symmetry', coerce_type=int, node=sym_node[0])
 
         self.palette = Palette()
 
-        for color_node in self.flame_node.xpath('//color'):
+        for color_node in self._flame_node.xpath('//color'):
             # should this be int(math.floor(float(... ?
             #TODO: This loses all the float palette entries from flam3.  Is this what we want?
             index = int(float(color_node.attrib['index']))
             rgb = map(int, whitespace_array('rgb', node=color_node))
-
-            self.palette.array[index].fill(rgb)
+            self.palette.array[index] = rgb
 
         self.xforms = []
-        for xform_node in self.flame_node.xpath('//xform'):
+        for xform_node in self._flame_node.xpath('//xform'):
             self.xforms.append(Xform(xml_node=xform_node))
-
-

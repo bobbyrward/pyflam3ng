@@ -292,6 +292,21 @@ cdef class RenderBuffer:
             stdlib.free(self._buffer)
             self._buffer = NULL
 
+def interpolate(list genome_list, int time):
+    cdef flam3_genome genomes
+    cdef flam3_genome result
+    cdef int ngenomes = len(genome_list)
+
+    genomes = <flam3_genome>_malloc(ngenomes * sizeof(flam3_genome))
+    result = <flam3_genome>_malloc(sizeof(flam3_genome))
+
+    for idx, genome in enumerate(genome_list):
+        memmove(&genomes[idx], (<GenomeHandle>genome)._genome, sizeof(flam3_genome))
+
+    flam3_interpolate(&genomes, ngenomes, time, 0.0, &result)
+    memmove((<GenomeHandle>result)._genome, &result, sizeof(flam3_genome))
+    return result
+
 
 cdef int __render_callback(void *context, double progress, int stage, double eta) with gil:
     if context != NULL and (<object>context) is not None:

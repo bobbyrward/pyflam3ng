@@ -311,3 +311,17 @@ cdef extern from "flam3.h":
     void sheep_edge(flam3_genome *cp, double blend, int seqflag, double stagger) nogil
 
 
+cdef class RenderBuffer:
+    cdef unsigned char* _buffer
+    cdef int _bytes_per_pixel
+    cdef unsigned int _width
+    cdef unsigned int _height
+
+    cpdef resize(RenderBuffer self, unsigned int width, unsigned int height, int channels)
+
+cdef class GenomeHandle:
+    cdef flam3_genome* _genome
+
+    cdef void copy_genome(self, flam3_genome* genome)
+    cdef _render(GenomeHandle self, void *out_buffer, unsigned int channels, int transparent, object progress, double pixel_aspect_ratio, int bits, double time, int nthreads)
+

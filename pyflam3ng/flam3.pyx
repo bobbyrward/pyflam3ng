@@ -159,11 +159,6 @@ def random_seed():
 
 
 cdef class RenderBuffer:
-    cdef unsigned char* _buffer
-    cdef int _bytes_per_pixel
-    cdef unsigned int _width
-    cdef unsigned int _height
-
     def __cinit__(RenderBuffer self, unsigned int width=0, unsigned int height=0, int channels=0):
         self._buffer = NULL
         self._bytes_per_pixel = 0
@@ -272,7 +267,7 @@ cdef class RenderBuffer:
         PyObject_AsWriteBuffer(legacy_buffer, <void**>&dest_p, &dest_len)
 
         if dest_len < total_len:
-            raise BufferError("buffer isn't large enough")
+            raise RuntimeError("buffer isn't large enough")
 
         memmove(dest_p, self._buffer, total_len)
 
@@ -304,8 +299,6 @@ cdef int __render_callback(void *context, double progress, int stage, double eta
 
 
 cdef class GenomeHandle:
-    cdef flam3_genome* _genome
-
     def __cinit__(self):
         self._genome = <flam3_genome*>_malloc(sizeof(flam3_genome));
 

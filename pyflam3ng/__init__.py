@@ -41,7 +41,7 @@ from . import vector_utils as vu
 EPSILON = 0.0000000000001
 
 def float_equality(x, y):
-    return abs(x-y) < (x * sys.float_info.epsilon)
+    return abs(x-y) < (x * EPSILON)
 
 
 def load_flame(xml_source=None, fd=None, filename=None):
